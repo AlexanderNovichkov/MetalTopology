@@ -21,7 +21,7 @@
     // Put teardown code here. This method is called after the invocation of each test method in the class.
 }
 
-- (void)testSimple {
+- (void)testOnMatrix1 {
     bool matrixArray[3][2] = {
         {1, 0},
         {0, 0},
@@ -39,14 +39,39 @@
     };
     Matrix * expectedMatrix = makeMatrixFromArray(_mDevice, (bool *)expectedArray, 3, 2);
     XCTAssertEqualObjects([matrix description], [expectedMatrix description]);
-
 }
 
-- (void)testPerformanceExample {
-    // This is an example of a performance test case.
-    [self measureBlock:^{
-        // Put the code you want to measure the time of here.
-    }];
+- (void)testOnMatrix2 {
+    bool matrixArray[9][10] = {
+        {0, 0, 1, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 1, 0, 0, 1, 1, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 1, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    };
+    Matrix * matrix = makeMatrixFromArray(_mDevice, (bool *)matrixArray, 9, 10);
+    
+    MatrixReduction* reduction = [[MatrixReduction alloc] initWithDevice:_mDevice];
+    [reduction makeReduction:matrix];
+    
+    bool expectedArray[9][10] = {
+        {0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 1, 1, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    };
+    Matrix * expectedMatrix = makeMatrixFromArray(_mDevice, (bool *)expectedArray, 9, 10);
+    
+    XCTAssertEqualObjects([matrix description], [expectedMatrix description]);
 }
 
 @end
