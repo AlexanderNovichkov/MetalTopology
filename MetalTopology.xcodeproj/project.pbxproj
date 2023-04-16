@@ -8,8 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		FA22CFFD29EC1C9000B6F933 /* MetalTopology.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA22CFF329EC1C9000B6F933 /* MetalTopology.framework */; };
-		FA22D00229EC1C9000B6F933 /* MetalTopologyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D00129EC1C9000B6F933 /* MetalTopologyTests.m */; };
 		FA22D00429EC1C9000B6F933 /* MetalTopology.h in Headers */ = {isa = PBXBuildFile; fileRef = FA22CFF629EC1C9000B6F933 /* MetalTopology.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		FA22D02229EC1D9700B6F933 /* MatrixReduction.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D01D29EC1D9600B6F933 /* MatrixReduction.m */; };
+		FA22D02329EC1D9700B6F933 /* MatrixReduction.metal in Sources */ = {isa = PBXBuildFile; fileRef = FA22D01E29EC1D9700B6F933 /* MatrixReduction.metal */; };
+		FA22D02429EC1D9700B6F933 /* MatrixReduction.h in Headers */ = {isa = PBXBuildFile; fileRef = FA22D01F29EC1D9700B6F933 /* MatrixReduction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		FA22D02529EC1D9700B6F933 /* Matrix.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D02029EC1D9700B6F933 /* Matrix.m */; };
+		FA22D02629EC1D9700B6F933 /* Matrix.h in Headers */ = {isa = PBXBuildFile; fileRef = FA22D02129EC1D9700B6F933 /* Matrix.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		FA22D02D29EC1E0B00B6F933 /* MatrixReductionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D02A29EC1E0B00B6F933 /* MatrixReductionTest.m */; };
+		FA22D02E29EC1E0B00B6F933 /* MatrixTest.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D02B29EC1E0B00B6F933 /* MatrixTest.m */; };
+		FA22D02F29EC1E0B00B6F933 /* utils.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D02C29EC1E0B00B6F933 /* utils.m */; };
+		FA22D03829EC1E3100B6F933 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA22D03729EC1E3000B6F933 /* Metal.framework */; };
+		FA22D04829EC319100B6F933 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D04729EC319100B6F933 /* main.m */; };
+		FA22D04F29EC31B800B6F933 /* MetalTopology.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA22CFF329EC1C9000B6F933 /* MetalTopology.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,13 +32,36 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		FA22D04329EC319100B6F933 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		FA22CFF329EC1C9000B6F933 /* MetalTopology.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = MetalTopology.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA22CFF629EC1C9000B6F933 /* MetalTopology.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MetalTopology.h; sourceTree = "<group>"; };
 		FA22CFF729EC1C9000B6F933 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FA22CFFC29EC1C9000B6F933 /* MetalTopologyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MetalTopologyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FA22D00129EC1C9000B6F933 /* MetalTopologyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MetalTopologyTests.m; sourceTree = "<group>"; };
 		FA22D00329EC1C9000B6F933 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FA22D01D29EC1D9600B6F933 /* MatrixReduction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixReduction.m; sourceTree = "<group>"; };
+		FA22D01E29EC1D9700B6F933 /* MatrixReduction.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MatrixReduction.metal; sourceTree = "<group>"; };
+		FA22D01F29EC1D9700B6F933 /* MatrixReduction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MatrixReduction.h; sourceTree = "<group>"; };
+		FA22D02029EC1D9700B6F933 /* Matrix.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Matrix.m; sourceTree = "<group>"; };
+		FA22D02129EC1D9700B6F933 /* Matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Matrix.h; sourceTree = "<group>"; };
+		FA22D02929EC1E0B00B6F933 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
+		FA22D02A29EC1E0B00B6F933 /* MatrixReductionTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixReductionTest.m; sourceTree = "<group>"; };
+		FA22D02B29EC1E0B00B6F933 /* MatrixTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MatrixTest.m; sourceTree = "<group>"; };
+		FA22D02C29EC1E0B00B6F933 /* utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = utils.m; sourceTree = "<group>"; };
+		FA22D03729EC1E3000B6F933 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		FA22D04529EC319100B6F933 /* compute */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = compute; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA22D04729EC319100B6F933 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA22D03829EC1E3100B6F933 /* Metal.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -47,15 +81,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FA22D04229EC319100B6F933 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA22D04F29EC31B800B6F933 /* MetalTopology.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		FA22CFE929EC1C9000B6F933 = {
 			isa = PBXGroup;
 			children = (
+				FA22D04029EC311200B6F933 /* cmd */,
 				FA22CFF529EC1C9000B6F933 /* MetalTopology */,
 				FA22D00029EC1C9000B6F933 /* MetalTopologyTests */,
 				FA22CFF429EC1C9000B6F933 /* Products */,
+				FA22D03629EC1E3000B6F933 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -64,6 +108,7 @@
 			children = (
 				FA22CFF329EC1C9000B6F933 /* MetalTopology.framework */,
 				FA22CFFC29EC1C9000B6F933 /* MetalTopologyTests.xctest */,
+				FA22D04529EC319100B6F933 /* compute */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -71,6 +116,11 @@
 		FA22CFF529EC1C9000B6F933 /* MetalTopology */ = {
 			isa = PBXGroup;
 			children = (
+				FA22D02129EC1D9700B6F933 /* Matrix.h */,
+				FA22D02029EC1D9700B6F933 /* Matrix.m */,
+				FA22D01F29EC1D9700B6F933 /* MatrixReduction.h */,
+				FA22D01D29EC1D9600B6F933 /* MatrixReduction.m */,
+				FA22D01E29EC1D9700B6F933 /* MatrixReduction.metal */,
 				FA22CFF629EC1C9000B6F933 /* MetalTopology.h */,
 				FA22CFF729EC1C9000B6F933 /* Info.plist */,
 			);
@@ -80,10 +130,37 @@
 		FA22D00029EC1C9000B6F933 /* MetalTopologyTests */ = {
 			isa = PBXGroup;
 			children = (
-				FA22D00129EC1C9000B6F933 /* MetalTopologyTests.m */,
+				FA22D02A29EC1E0B00B6F933 /* MatrixReductionTest.m */,
+				FA22D02B29EC1E0B00B6F933 /* MatrixTest.m */,
+				FA22D02929EC1E0B00B6F933 /* utils.h */,
+				FA22D02C29EC1E0B00B6F933 /* utils.m */,
 				FA22D00329EC1C9000B6F933 /* Info.plist */,
 			);
 			path = MetalTopologyTests;
+			sourceTree = "<group>";
+		};
+		FA22D03629EC1E3000B6F933 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FA22D03729EC1E3000B6F933 /* Metal.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		FA22D04029EC311200B6F933 /* cmd */ = {
+			isa = PBXGroup;
+			children = (
+				FA22D04629EC319100B6F933 /* compute */,
+			);
+			path = cmd;
+			sourceTree = "<group>";
+		};
+		FA22D04629EC319100B6F933 /* compute */ = {
+			isa = PBXGroup;
+			children = (
+				FA22D04729EC319100B6F933 /* main.m */,
+			);
+			path = compute;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -94,6 +171,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA22D00429EC1C9000B6F933 /* MetalTopology.h in Headers */,
+				FA22D02629EC1D9700B6F933 /* Matrix.h in Headers */,
+				FA22D02429EC1D9700B6F933 /* MatrixReduction.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,6 +215,23 @@
 			productReference = FA22CFFC29EC1C9000B6F933 /* MetalTopologyTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		FA22D04429EC319100B6F933 /* compute */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA22D04929EC319100B6F933 /* Build configuration list for PBXNativeTarget "compute" */;
+			buildPhases = (
+				FA22D04129EC319100B6F933 /* Sources */,
+				FA22D04229EC319100B6F933 /* Frameworks */,
+				FA22D04329EC319100B6F933 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = compute;
+			productName = compute;
+			productReference = FA22D04529EC319100B6F933 /* compute */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -148,6 +244,9 @@
 						CreatedOnToolsVersion = 12.2;
 					};
 					FA22CFFB29EC1C9000B6F933 = {
+						CreatedOnToolsVersion = 12.2;
+					};
+					FA22D04429EC319100B6F933 = {
 						CreatedOnToolsVersion = 12.2;
 					};
 				};
@@ -167,6 +266,7 @@
 			targets = (
 				FA22CFF229EC1C9000B6F933 /* MetalTopology */,
 				FA22CFFB29EC1C9000B6F933 /* MetalTopologyTests */,
+				FA22D04429EC319100B6F933 /* compute */,
 			);
 		};
 /* End PBXProject section */
@@ -193,6 +293,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA22D02329EC1D9700B6F933 /* MatrixReduction.metal in Sources */,
+				FA22D02229EC1D9700B6F933 /* MatrixReduction.m in Sources */,
+				FA22D02529EC1D9700B6F933 /* Matrix.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -200,7 +303,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FA22D00229EC1C9000B6F933 /* MetalTopologyTests.m in Sources */,
+				FA22D02D29EC1E0B00B6F933 /* MatrixReductionTest.m in Sources */,
+				FA22D02E29EC1E0B00B6F933 /* MatrixTest.m in Sources */,
+				FA22D02F29EC1E0B00B6F933 /* utils.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FA22D04129EC319100B6F933 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA22D04829EC319100B6F933 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -412,6 +525,26 @@
 			};
 			name = Release;
 		};
+		FA22D04A29EC319100B6F933 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = JCP45S4X6Q;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		FA22D04B29EC319100B6F933 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = JCP45S4X6Q;
+				ENABLE_HARDENED_RUNTIME = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -438,6 +571,15 @@
 			buildConfigurations = (
 				FA22D00B29EC1C9000B6F933 /* Debug */,
 				FA22D00C29EC1C9000B6F933 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FA22D04929EC319100B6F933 /* Build configuration list for PBXNativeTarget "compute" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA22D04A29EC319100B6F933 /* Debug */,
+				FA22D04B29EC319100B6F933 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

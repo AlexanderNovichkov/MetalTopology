@@ -1,10 +1,3 @@
-//
-//  MetalTopology.h
-//  MetalTopology
-//
-//  Created by Александр Новичков on 16.04.2023.
-//
-
 #import <Foundation/Foundation.h>
 
 //! Project version number for MetalTopology.
