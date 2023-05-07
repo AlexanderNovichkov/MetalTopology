@@ -1,70 +1,21 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
-#import "MatrixReduction.h"
-#import "Matrix.h"
+#import "SparseMatrixReduction.h"
 
-
-Matrix * makeMatrixFromArray(id<MTLDevice> device, bool* array, uint rows, uint cols){
-    Matrix * matrix = [[Matrix alloc] initWithDevice:device Rows:rows Cols:cols];
-    [matrix fillFromArray:array];
-    return matrix;
-}
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
+        NSString * path = @"/Users/alex/Desktop/Education/4-cource/diploma/MetalTopologyBenchmark/datasets/klein_bottle_400/boundary_matrix.txt";
 
         id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-        bool matrixArray[9][10] = {
-            {0, 0, 1, 0, 0, 0, 0, 0, 0, 1},
-            {0, 0, 1, 0, 0, 1, 1, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 1, 1, 0, 0},
-            {0, 0, 0, 0, 0, 1, 0, 1, 0, 1},
-            {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        };
-        Matrix * matrix = makeMatrixFromArray(device, (bool *)matrixArray, 9, 10);
+
+        SparseMatrix *matrix = [[SparseMatrix alloc] initWithDevice:device FromFile:path];
         
-        MatrixReduction* reduction = [[MatrixReduction alloc] initWithDevice:device];
-        [reduction makeReduction:matrix];
-        
-        bool expectedArray[9][10] = {
-            {0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 1, 0, 0, 1, 1, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
-            {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        };
-        Matrix * expectedMatrix = makeMatrixFromArray(device, (bool *)expectedArray, 9, 10);
+        SparseMatrixReduction* reduction = [[SparseMatrixReduction alloc] initWithDevice: device Matrix:matrix];
+        SparseMatrix *reducedMatrix = [reduction makeReduction];
         
         
-        
-        NSLog([matrix description]);
-        NSLog([expectedMatrix description]);
-        assert([[matrix description] isEqualToString: [expectedMatrix description]]);
-        
-//
-//
-//        // Create the custom object used to encapsulate the Metal code.
-//        // Initializes objects to communicate with the GPU.
-//        MatrixReduction* matrix_reduction = [[MatrixReduction alloc] initWithDevice:device];
-//
-//
-//        // Create buffers to hold data
-//        [adder1 prepareData];
-//
-//
-//        // Send a command to the GPU to perform the calculation.
-//        [adder1 sendComputeCommand];
-//
-//        NSLog(@"Execution finished");
-        
+        NSLog(@"%@", [reducedMatrix description]);
     }
     return 0;
 }

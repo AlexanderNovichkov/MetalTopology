@@ -38,6 +38,7 @@
     XCTAssertEqual([_matrix23 getRow:0 Col:0], 0);
 }
 
+
 - (void)testFill {
     bool array[2][3] = {
         {1, 0, 1},

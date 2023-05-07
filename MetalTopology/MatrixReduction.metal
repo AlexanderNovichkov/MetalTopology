@@ -1,4 +1,5 @@
 #include <metal_stdlib>
+
 using namespace metal;
 
 kernel void add_arrays(device const uint* columnToAdd,
