@@ -33,7 +33,7 @@
 
 
 - (void) testDescription {
-    XCTAssertEqualObjects([_matrix description], @"4\n\n0\n0 1\n1");
+    XCTAssertEqualObjects([_matrix description], @"4 4\n0\n1 0\n2 0 1\n1 1\n");
 }
 
 @end

@@ -21,9 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) writeToFile: (NSString *) path;
 
-- (bool) getRow: (uint32_t) row Col: (uint32_t) col;
-
-- (void) fillFromArray: (bool*) array;
+- (uint32_t) getNumberOfNonZeros;
 
 - (NSString *)description;
 

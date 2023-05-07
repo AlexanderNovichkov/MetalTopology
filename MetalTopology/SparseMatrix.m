@@ -3,7 +3,6 @@
 
 @implementation SparseMatrix
 {
-    int _kek;
 }
 
 - (instancetype) initWithDevice: (id<MTLDevice>) device FromFile: (NSString *) path
@@ -11,46 +10,48 @@
     self = [super init];
     if(self){
         NSString * fileContents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
-        int elements_in_matrix = 0;
-        int col = 0;
-        for (NSString *line in [fileContents componentsSeparatedByString:@"\n"]) {
-            if([line length] > 0) {
-                NSArray *stringNumbers = [line componentsSeparatedByString:@" "];
-                for (NSString *stringNumber in stringNumbers) {
-                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                    NSNumber *number = [formatter numberFromString:stringNumber];
-                    if (number) {
-                        elements_in_matrix++;
-                    }
-                }
+        NSScanner *scanner=[NSScanner scannerWithString:fileContents];
+        
+        unsigned long long value;
+        if(![scanner scanUnsignedLongLong:&value]) {
+            NSLog(@"First number in file should set number of columns (simplices)");
+            return nil;
+        }
+        _n = value;
+        
+        if(![scanner scanUnsignedLongLong:&value]) {
+            NSLog(@"Second number in file should set number of non-zero elements in boundary matrix");
+            return nil;
+        }
+        uint32_t nonZeros =  value;
+        
+        self.colOffsets = [device newBufferWithLength:_n * sizeof(uint32_t) options:MTLResourceStorageModeManaged];
+        self.colLengths = [device newBufferWithLength:_n * sizeof(uint32_t) options:MTLResourceStorageModeManaged];
+        self.rowIndices = [device newBufferWithLength:nonZeros * sizeof(uint32_t) options:MTLResourceStorageModeManaged];
+        
+        
+        uint32_t rowIndicesPos = 0;
+        for(uint32_t col = 0; col < _n; col++){
+            if(![scanner scanUnsignedLongLong:&value]) {
+                NSLog(@"Error reading number of elements in column %u", col);
+                return nil;
             }
-            col++;
+            _colLengthsPtr[col] = value;
+            _colOffsetsPtr[col] = rowIndicesPos;
+            
+            for(uint32_t i = 0; i < _colLengthsPtr[col];i++) {
+                unsigned long long row;
+                if(![scanner scanUnsignedLongLong:&value]) {
+                    NSLog(@"Error reading element # %u for column # %u with length %llu", i, col, _colLengthsPtr[col]);
+                    return nil;
+                }
+                _rowIndicesPtr[rowIndicesPos++] = value;
+            }
         }
         
-        _n = col;
-        self.colOffsets = [device newBufferWithLength:_n * sizeof(uint32_t) options:MTLResourceStorageModeShared];
-        self.colLengths = [device newBufferWithLength:_n * sizeof(uint32_t) options:MTLResourceStorageModeShared];
-        self.rowIndices = [device newBufferWithLength:elements_in_matrix * sizeof(uint32_t) options:MTLResourceStorageModeShared];
-        
-        
-        col = 0;
-        int row_indices_pos = 0;
-        for (NSString *line in [fileContents componentsSeparatedByString:@"\n"]) {
-            _colOffsetsPtr[col] = row_indices_pos;
-            if([line length] > 0) {
-                NSArray *stringNumbers = [line componentsSeparatedByString:@" "];
-                _colLengthsPtr[col] = 0;
-                for (NSString *stringNumber in stringNumbers) {
-                    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
-                    NSNumber *number = [formatter numberFromString:stringNumber];
-                    if (number) {
-                        _rowIndicesPtr[row_indices_pos] = [number unsignedIntValue];
-                        row_indices_pos++;
-                        _colLengthsPtr[col]++;
-                    }
-                }
-            }
-            col++;
+        if(rowIndicesPos != nonZeros) {
+            NSLog(@"Actual number of non-zero elements=%u is not equal to number set in file=%u", rowIndicesPos, nonZeros);
+            return nil;
         }
     }
     return self;
@@ -60,9 +61,9 @@
     self = [super init];
     if(self) {
         _n = n;
-        self.colOffsets = [device newBufferWithLength:_n * sizeof(uint32_t) options:MTLResourceStorageModeShared];
-        self.colLengths = [device newBufferWithLength:_n * sizeof(uint32_t) options:MTLResourceStorageModeShared];
-        self.rowIndices = [device newBufferWithLength: 1 * sizeof(uint32_t) options:MTLResourceStorageModeShared];
+        self.colOffsets = [device newBufferWithLength:_n * sizeof(uint32_t) options:MTLResourceStorageModeManaged];
+        self.colLengths = [device newBufferWithLength:_n * sizeof(uint32_t) options:MTLResourceStorageModeManaged];
+        self.rowIndices = [device newBufferWithLength: 1 * sizeof(uint32_t) options:MTLResourceStorageModeManaged];
     }
     return self;
 }
@@ -72,24 +73,27 @@
     [str writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }
 
+- (uint32_t) getNumberOfNonZeros {
+    uint32_t count = 0;
+    for(uint32_t col = 0; col < _n;col++) {
+        count += _colLengthsPtr[col];
+    }
+    return count;
+}
 
 - (NSString *)description {
     NSMutableString *description = [[NSMutableString alloc]init];
-//    [description appendFormat:@"%u\n", _n];
+    [description appendFormat:@"%u %u\n", _n, [self getNumberOfNonZeros]];
 
     for (int col = 0; col < _n;col++) {
         uint32_t offset = _colOffsetsPtr[col];
         uint32_t length = _colLengthsPtr[col];
+        [description appendFormat:@"%u", length];
         for(uint32_t i = 0; i < length; i++) {
             uint32_t row = _rowIndicesPtr[offset + i];
-            [description appendFormat:@"%u", row];
-            if(i + 1 != length) {
-                [description appendFormat:@" "];
-            }
+            [description appendFormat:@" %u", row];
         }
-        if(col + 1 != _n) {
-            [description appendString:@"\n"];
-        }
+        [description appendFormat:@"\n"];
     }
     return description;
 }
