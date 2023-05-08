@@ -66,12 +66,13 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
     id<MTLBuffer> _leftColByLow;
     uint32_t* _leftColByLowPtr;
     
+
+    id<MTLBuffer> _colToAdd;
+    uint32_t* _colToAddPtr;
     
     // Optimization variables, allow us not to allocate memory every iteration
     SparseMatrix * _matrixToSumCols;
-    
-    id<MTLBuffer> _colToAdd;
-    uint32_t* _colToAddPtr;
+
 
 }
 
@@ -315,11 +316,9 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
     [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
     [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
     [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
-
     [_matrixToSumCols.colOffsets didModifyRange:NSMakeRange(0, _matrixToSumCols.colOffsets.length)];
     [_matrixToSumCols.colLengths didModifyRange:NSMakeRange(0, _matrixToSumCols.colLengths.length)];
     [_matrixToSumCols.rowIndices didModifyRange:NSMakeRange(0, _matrixToSumCols.rowIndices.length)];
-
 
     [computeEncoder setComputePipelineState:_mAddMatrixColumnsPSO];
     [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
@@ -359,6 +358,19 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
     _colAdditionsGPUTime += executionTime;
 }
 
+
+- (PersistencePairs*) getPersistentPairs {
+    PersistencePairs *pairs = [[PersistencePairs alloc] init];
+    for(uint32_t i = 0; i < _nonZeroColsCount;i++) {
+        uint32_t col = _nonZeroColsPtr[i];
+        PersistencePair * pair = [[PersistencePair alloc] init];
+        pair.left = _lowPtr[col];
+        pair.right = col;
+        [pairs.pairs addObject:pair];
+    }
+    [pairs sortPairsByLeft];
+    return pairs;
+}
 
 
 
