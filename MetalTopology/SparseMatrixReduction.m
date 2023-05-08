@@ -45,6 +45,7 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
 
 @implementation SparseMatrixReduction
 {
+    // metal variables
     id<MTLDevice> _mDevice;
     id<MTLCommandQueue> _mCommandQueue;
     id<MTLComputePipelineState> _mAddMatrixColumnsPSO;
@@ -52,15 +53,22 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
     // metrics
     double _colAdditionsGPUTime;
     
-    // variables below are updated every iteration of algorithm
+    // State variables, updated every iteration of algorithm
     SparseMatrix * _matrix;
-    SparseMatrix * _matrixToSumCols;
     
     id<MTLBuffer> _low;
     uint32_t* _lowPtr;
     
+    uint32_t _nonZeroColsCount;
+    id<MTLBuffer> _nonZeroCols;
+    uint32_t* _nonZeroColsPtr;
+    
     id<MTLBuffer> _leftColByLow;
     uint32_t* _leftColByLowPtr;
+    
+    
+    // Optimization variables, allow us not to allocate memory every iteration
+    SparseMatrix * _matrixToSumCols;
     
     id<MTLBuffer> _colToAdd;
     uint32_t* _colToAddPtr;
@@ -107,11 +115,35 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
         _matrix = matrix;
         _matrixToSumCols = [[SparseMatrix alloc] initWithDevice: _mDevice N:_matrix.n];
         
+        _nonZeroColsCount = 0;
+        _nonZeroCols = [_mDevice newBufferWithLength:matrix.n * sizeof(uint32_t) options:MTLResourceStorageModeShared];
+        _nonZeroColsPtr = _nonZeroCols.contents;
+        for(uint32_t col = 0; col < _matrix.n; col++) {
+            if(_matrix.colLengthsPtr[col] != 0) {
+                _nonZeroColsPtr[_nonZeroColsCount++] = col;
+            }
+        }
+        
         _low = [_mDevice newBufferWithLength:matrix.n * sizeof(uint32_t) options:MTLResourceStorageModeShared];
         _lowPtr = _low.contents;
-        
         _leftColByLow = [_mDevice newBufferWithLength:matrix.n * sizeof(uint32_t) options:MTLResourceStorageModeShared];
         _leftColByLowPtr = _leftColByLow.contents;
+        for(uint32_t col = 0; col < _matrix.n; col++) {
+            _leftColByLowPtr[col] = UINT32_MAX;
+        }
+        for(uint32_t col = 0; col < _matrix.n; col++) {
+            uint32_t length = _matrix.colLengthsPtr[col];
+            if(length == 0) {
+                _lowPtr[col] = UINT32_MAX;
+            } else {
+                uint32_t offset = _matrix.colOffsetsPtr[col];
+                uint32_t low = _matrix.rowIndicesPtr[offset + length - 1];
+                _lowPtr[col] = low;
+                if(_leftColByLowPtr[low] > col) {
+                    _leftColByLowPtr[low] = col;
+                }
+            }
+        }
         
         _colToAdd = [_mDevice newBufferWithLength:matrix.n * sizeof(uint32_t) options:MTLResourceStorageModeShared];
         _colToAddPtr = _colToAdd.contents;
@@ -122,50 +154,25 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
 
 - (SparseMatrix*) makeReduction
 {
-    int it = 0;
+    
+//    [self MakeClearing];
+    uint32_t it = 0;
     while (true){
         @autoreleasepool {
-            NSLog(@"Matrix at iteration start");
-    //        NSLog(@"%@", [_matrix description]);
-            
-            [self computeLow];
-            NSLog(@"_lowPtr");
-    //        for(uint32_t col = 0; col < _matrix.n;col++) {
-    //            NSLog(@"%lu ", _lowPtr[col]);
-    //        }
-            
-            [self computeLeftColByLow];
-            NSLog(@"_leftColByLowPtr");
-    //        for(uint32_t col = 0; col < _matrix.n;col++) {
-    //            NSLog(@"%lu ", _leftColByLowPtr[col]);
-    //        }
+            it++;
+            NSLog(@"Iteration start: %u", it);
             
             if( [self isMatrixReduced]) {
                 break;
             }
             
             [self computeColToAdd];
-            NSLog(@"_colToAddPtr");
-    //        for(uint32_t col = 0; col < _matrix.n;col++) {
-    //            NSLog(@"%lu ", _colToAddPtr[col]);
-    //        }
-            
-            
-            it++;
-            NSLog(@"iteration # %d", it);
-//            if(it == 30){
-//                while (true) {
-//                    @autoreleasepool {
-//                        [self addColumns];
-//                    }
-//                }
-//            }
-            
             
             [self addColumns];
-    //        NSLog(@"%@", [_matrix description]);
             
-            NSLog(@"Done Iteration");
+            [self computeLowAndLeftColByLow];
+            
+            [self computeNonZeroCols];
         }
     }
     
@@ -175,96 +182,56 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
     return _matrix;
 }
 
-
-- (void) ExecuteColumnAdditionsOnGpu {
-//    for(uint col = 0; col < _matrix.n;col++){
-//        addMatrixColumns2(_matrix.colOffsetsPtr, _matrix.colLengthsPtr, _matrix.rowIndicesPtr,
-//                      _matrixToSumCols.colOffsetsPtr, _matrixToSumCols.colLengthsPtr, _matrixToSumCols.rowIndicesPtr,
-//                      _colToAddPtr, col);
-//    }
-
-    
-    id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
-    assert(commandBuffer != nil);
-    id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
-    assert(computeEncoder != nil);
-    
-
-    [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
-    [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
-    [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
-
-    [_matrixToSumCols.colOffsets didModifyRange:NSMakeRange(0, _matrixToSumCols.colOffsets.length)];
-    [_matrixToSumCols.colLengths didModifyRange:NSMakeRange(0, _matrixToSumCols.colLengths.length)];
-    [_matrixToSumCols.rowIndices didModifyRange:NSMakeRange(0, _matrixToSumCols.rowIndices.length)];
-    
-    
-    [computeEncoder setComputePipelineState:_mAddMatrixColumnsPSO];
-    [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
-    [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
-    [computeEncoder setBuffer:_matrix.rowIndices offset:0 atIndex:2];
-    [computeEncoder setBuffer:_matrixToSumCols.colOffsets offset:0 atIndex:3];
-    [computeEncoder setBuffer:_matrixToSumCols.colLengths offset:0 atIndex:4];
-    [computeEncoder setBuffer:_matrixToSumCols.rowIndices offset:0 atIndex:5];
-    [computeEncoder setBuffer:_colToAdd offset:0 atIndex:6];
-
-
-    MTLSize gridSize = MTLSizeMake(_matrix.n, 1, 1);
-
-
-    NSUInteger threadsInThreadgroup = MIN(_mAddMatrixColumnsPSO.maxTotalThreadsPerThreadgroup, _matrix.n);
-    MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
-
-    [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
-    [computeEncoder endEncoding];
-    
-    // Synchronize the managed buffer.
-    id <MTLBlitCommandEncoder> blitCommandEncoder = [commandBuffer blitCommandEncoder];
-    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colOffsets];
-    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colLengths];
-    [blitCommandEncoder synchronizeResource:_matrixToSumCols.rowIndices];
-    [blitCommandEncoder endEncoding];
-    
-    
-    NSDate *methodStart = [NSDate date];
-    
-    [commandBuffer commit];
-    [commandBuffer waitUntilCompleted];
-
-    NSDate *methodFinish = [NSDate date];
-    NSTimeInterval executionTime = [methodFinish timeIntervalSinceDate:methodStart];
-    NSLog(@"GPU_EXECUTION_TIME = %f", 1000 * executionTime);
-    _colAdditionsGPUTime += executionTime;
+- (void) computeNonZeroCols {
+    NSLog(@"Start method computeNonZeroCols");
+    uint32_t writePos = 0;
+    for(uint32_t i = 0; i < _nonZeroColsCount;i++) {
+        uint32_t col = _nonZeroColsPtr[i];
+        if(_matrix.colLengthsPtr[col] != 0) {
+            _nonZeroColsPtr[writePos++] = col;
+        }
+    }
+    _nonZeroColsCount = writePos;
 }
 
-- (void) computeLow {
-    for(uint32_t col = 0; col < _matrix.n; col++) {
+- (void) computeLowAndLeftColByLow {
+    NSLog(@"Start method computeLowAndLeftColByLow");
+    for(uint32_t i = 0; i < _nonZeroColsCount;i++) {
+        uint32_t col = _nonZeroColsPtr[i];
         uint32_t length = _matrix.colLengthsPtr[col];
         if(length == 0) {
             _lowPtr[col] = UINT32_MAX;
         } else {
             uint32_t offset = _matrix.colOffsetsPtr[col];
-            _lowPtr[col] = _matrix.rowIndicesPtr[offset + length - 1];
+            uint32_t low = _matrix.rowIndicesPtr[offset + length - 1];
+            _lowPtr[col] = low;
+            if(_leftColByLowPtr[low] > col) {
+                _leftColByLowPtr[low] = col;
+            }
         }
     }
 }
 
-- (void) computeLeftColByLow {
+- (void) MakeClearing{
+    NSLog(@"Start method MakeClearing");
+    uint32_t cleared = 0;
     for(uint32_t col = 0; col < _matrix.n; col++) {
-        _leftColByLowPtr[col] = UINT32_MAX;
-    }
-    for(uint32_t col = 0; col < _matrix.n; col++) {
-        uint32_t low = _lowPtr[col];
-        if(low == UINT32_MAX) {
+        uint32_t colToZero = _lowPtr[col];
+        if(colToZero == UINT32_MAX) {
             continue;
         }
-        if(_leftColByLowPtr[low] > col) {
-            _leftColByLowPtr[low] = col;
+        if(_matrix.colLengthsPtr[colToZero] == 0) {
+            continue;
         }
+        cleared++;
+        _lowPtr[colToZero] = UINT32_MAX;
+        _matrix.colLengthsPtr[colToZero] = 0;
     }
+    NSLog(@"Cleared columns: %u", cleared);
 }
 
 - (void) computeColToAdd {
+    NSLog(@"Start method computeColToAdd");
     for(uint32_t col = 0; col < _matrix.n; col++) {
         uint32_t low = _lowPtr[col];
         if(low == UINT32_MAX) {
@@ -294,14 +261,14 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
 }
 
 - (void) addColumns {
+    NSLog(@"Start method addColumns");
     uint32_t add_cnt = 0;
     for(uint32_t col = 0; col < _matrix.n; col++) {
         _matrixToSumCols.colLengthsPtr[col] = _matrix.colLengthsPtr[col];
         uint32_t colToAdd = _colToAddPtr[col];
         if(colToAdd != UINT32_MAX) {
-            _matrixToSumCols.colLengthsPtr[col] += _matrix.colLengthsPtr[colToAdd];
+            _matrixToSumCols.colLengthsPtr[col] += _matrix.colLengthsPtr[colToAdd] - 2;
             add_cnt++;
-            // TODO: вроде, можно гарантировать, что длина на 2 меньше
         }
     }
     
@@ -326,6 +293,71 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
     _matrixToSumCols = tmp;
 }
     
+- (void) ExecuteColumnAdditionsOnGpu {
+//    NSDate *methodStart = [NSDate date];
+//    for(uint col = 0; col < _matrix.n;col++){
+//        addMatrixColumns2(_matrix.colOffsetsPtr, _matrix.colLengthsPtr, _matrix.rowIndicesPtr,
+//                      _matrixToSumCols.colOffsetsPtr, _matrixToSumCols.colLengthsPtr, _matrixToSumCols.rowIndicesPtr,
+//                      _colToAddPtr, col);
+//    }
+//    NSDate *methodFinish = [NSDate date];
+//    NSTimeInterval executionTime = [methodFinish timeIntervalSinceDate:methodStart];
+//    NSLog(@"CPU_EXECUTION_TIME = %f", 1000 * executionTime);
+//    _colAdditionsGPUTime += executionTime;
+
+
+    id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
+    assert(commandBuffer != nil);
+    id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
+    assert(computeEncoder != nil);
+
+
+    [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
+    [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
+    [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
+
+    [_matrixToSumCols.colOffsets didModifyRange:NSMakeRange(0, _matrixToSumCols.colOffsets.length)];
+    [_matrixToSumCols.colLengths didModifyRange:NSMakeRange(0, _matrixToSumCols.colLengths.length)];
+    [_matrixToSumCols.rowIndices didModifyRange:NSMakeRange(0, _matrixToSumCols.rowIndices.length)];
+
+
+    [computeEncoder setComputePipelineState:_mAddMatrixColumnsPSO];
+    [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
+    [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
+    [computeEncoder setBuffer:_matrix.rowIndices offset:0 atIndex:2];
+    [computeEncoder setBuffer:_matrixToSumCols.colOffsets offset:0 atIndex:3];
+    [computeEncoder setBuffer:_matrixToSumCols.colLengths offset:0 atIndex:4];
+    [computeEncoder setBuffer:_matrixToSumCols.rowIndices offset:0 atIndex:5];
+    [computeEncoder setBuffer:_colToAdd offset:0 atIndex:6];
+
+
+    MTLSize gridSize = MTLSizeMake(_matrix.n, 1, 1);
+
+
+    NSUInteger threadsInThreadgroup = MIN(_mAddMatrixColumnsPSO.maxTotalThreadsPerThreadgroup, _matrix.n);
+    MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
+
+    [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+    [computeEncoder endEncoding];
+
+    // Synchronize the managed buffer.
+    id <MTLBlitCommandEncoder> blitCommandEncoder = [commandBuffer blitCommandEncoder];
+    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colOffsets];
+    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colLengths];
+    [blitCommandEncoder synchronizeResource:_matrixToSumCols.rowIndices];
+    [blitCommandEncoder endEncoding];
+
+
+    NSDate *methodStart = [NSDate date];
+
+    [commandBuffer commit];
+    [commandBuffer waitUntilCompleted];
+
+    NSDate *methodFinish = [NSDate date];
+    NSTimeInterval executionTime = [methodFinish timeIntervalSinceDate:methodStart];
+    NSLog(@"GPU_EXECUTION_TIME = %f", 1000 * executionTime);
+    _colAdditionsGPUTime += executionTime;
+}
 
 
 
