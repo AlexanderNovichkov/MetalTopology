@@ -13,9 +13,8 @@ kernel void addMatrixColumns(device const index_t *matrixColOffsets,
                                device index_t *resultMatrixColLengths,
                                device index_t *resultMatrixRowIndices,
                                device const index_t * colToAdd,
-                               uint2 gridPos [[thread_position_in_grid]])
+                               uint rightCol [[thread_position_in_grid]])
 {
-    const index_t rightCol = gridPos[0];
     const index_t leftCol = colToAdd[rightCol];
     
     index_t leftColOffsetCur = (leftCol == MAX_INDEX) ? MAX_INDEX : matrixColOffsets[leftCol];
@@ -54,9 +53,9 @@ kernel void computeLowAndLeftColByLow(device const index_t *matrixColOffsets,
                        device index_t *lows,
                        device index_t *leftColByLow,
                        device index_t *nonZeroCols,
-                       uint2 gridPos [[thread_position_in_grid]])
+                       uint nonZeroColsIdx [[thread_position_in_grid]])
 {
-    const index_t col = nonZeroCols[gridPos[0]];
+    const index_t col = nonZeroCols[nonZeroColsIdx];
     const index_t length = matrixColLengths[col];
     if(length == 0) {
         lows[col] = MAX_INDEX;
@@ -69,3 +68,16 @@ kernel void computeLowAndLeftColByLow(device const index_t *matrixColOffsets,
     atomic_fetch_min_explicit((device atomic_uint*)(&leftColByLow[low]), col, memory_order_relaxed);
 }
 
+
+kernel void computeNonZeroCols(device const index_t *matrixColLengths,
+                                      device index_t *nonZeroCols,
+                                      device index_t *nonZeroColsResult,
+                                      device atomic_uint * nonZeroColsCount,
+                                      uint idx [[thread_position_in_grid]])
+{
+    const index_t col = nonZeroCols[idx];
+    if(matrixColLengths[col] != 0) {
+        index_t pos = atomic_fetch_add_explicit(nonZeroColsCount, 1, memory_order_relaxed);
+        nonZeroColsResult[pos] = col;
+    }
+}

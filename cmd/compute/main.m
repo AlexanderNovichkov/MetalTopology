@@ -30,6 +30,7 @@ int main(int argc, const char * argv[]) {
         
         NSLog(@"computationTimeTotal = %f s", reduction.computationTimeTotal);
         NSLog(@"computeLowAndLeftColByLowGPUTime = %f s", reduction.computeLowAndLeftColByLowGPUTime);
+        NSLog(@"computeNonZeroColsGPUTime = %f s", reduction.computeNonZeroColsGPUTime);
         NSLog(@"colAdditionsGPUTime = %f s", reduction.colAdditionsGPUTime);
         
     }

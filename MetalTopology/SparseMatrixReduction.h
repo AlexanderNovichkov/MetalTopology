@@ -11,6 +11,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) double computationTimeTotal;
 @property(readonly) double colAdditionsGPUTime;
 @property(readonly) double computeLowAndLeftColByLowGPUTime;
+@property(readonly) double computeNonZeroColsGPUTime;
+
 
 - (instancetype) initWithDevice: (id<MTLDevice>) device Matrix: (SparseMatrix*) matrix;
 - (SparseMatrix*) makeReduction;
