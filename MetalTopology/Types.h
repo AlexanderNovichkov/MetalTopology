@@ -1,3 +1,3 @@
-#define index_t uint32_t
+#define index_t uint
 
-#define MAX_INDEX 4294967295
+#define MAX_INDEX UINT_MAX

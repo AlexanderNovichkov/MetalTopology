@@ -50,10 +50,7 @@ void addMatrixColumns2(const index_t *matrixColOffsets,
     id<MTLDevice> _mDevice;
     id<MTLCommandQueue> _mCommandQueue;
     id<MTLComputePipelineState> _mAddMatrixColumnsPSO;
-    id<MTLComputePipelineState> _mComputeLowPSO;
-    
-    // metrics
-    double _colAdditionsGPUTime;
+    id<MTLComputePipelineState> _mComputeLowAndLeftColByLowPSO;
     
     // State variables, updated every iteration of algorithm
     SparseMatrix * _matrix;
@@ -108,14 +105,14 @@ void addMatrixColumns2(const index_t *matrixColOffsets,
             return nil;
         }
         
-        id<MTLFunction> computeLow = [defaultLibrary newFunctionWithName:@"computeLow"];
-        if (computeLow == nil)
+        id<MTLFunction> computeLowAndLeftColByLow = [defaultLibrary newFunctionWithName:@"computeLowAndLeftColByLow"];
+        if (computeLowAndLeftColByLow == nil)
         {
             NSLog(@"Failed to find metal function computeLow");
             return nil;
         }
-        _mComputeLowPSO = [_mDevice newComputePipelineStateWithFunction: computeLow error:&error];
-        if (_mComputeLowPSO == nil)
+        _mComputeLowAndLeftColByLowPSO = [_mDevice newComputePipelineStateWithFunction: computeLowAndLeftColByLow error:&error];
+        if (_mComputeLowAndLeftColByLowPSO == nil)
         {
             NSLog(@"Failed to created pipeline state object, error %@.", error);
             return nil;
@@ -184,6 +181,7 @@ void addMatrixColumns2(const index_t *matrixColOffsets,
 
 - (SparseMatrix*) makeReduction
 {
+    NSDate *start = [NSDate date];
     
     index_t it = 0;
     while (true){
@@ -201,14 +199,13 @@ void addMatrixColumns2(const index_t *matrixColOffsets,
             
             [self addColumns];
             
-            [self computeLowAndLeftColByLow];
+            [self ComputeLowAndLeftColByLowOnGpu];
             
             [self computeNonZeroCols];
         }
     }
     
-    NSLog(@"STATS");
-    NSLog(@"_colAdditionsGPUTime=%f", _colAdditionsGPUTime);
+    _computationTimeTotal = [[NSDate date] timeIntervalSinceDate:start];
     
     return _matrix;
 }
@@ -225,18 +222,6 @@ void addMatrixColumns2(const index_t *matrixColOffsets,
     _nonZeroColsCount = writePos;
 }
 
-- (void) computeLowAndLeftColByLow {
-    NSLog(@"Start method computeLowAndLeftColByLow");
-    [self ComputeLowOnGpu];
-    
-    for(index_t i = 0; i < _nonZeroColsCount;i++) {
-        index_t col = _nonZeroColsPtr[i];
-        index_t low = _lowPtr[col];
-        if(low != MAX_INDEX && _leftColByLowPtr[low] > col) {
-            _leftColByLowPtr[low] = col;
-        }
-    }
-}
 
 //- (void) MakeClearing{
 //    NSLog(@"Start method MakeClearing");
@@ -377,14 +362,13 @@ void addMatrixColumns2(const index_t *matrixColOffsets,
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
 
-    NSDate *methodFinish = [NSDate date];
-    NSTimeInterval executionTime = [methodFinish timeIntervalSinceDate:methodStart];
+    NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:methodStart];
     NSLog(@"GPU_EXECUTION_TIME = %f", 1000 * executionTime);
     _colAdditionsGPUTime += executionTime;
 }
 
 
-- (void) ComputeLowOnGpu {
+- (void) ComputeLowAndLeftColByLowOnGpu {
     NSLog(@"Start method ComputeLowOnGpu");
     NSDate *methodStart = [NSDate date];
     id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
@@ -397,15 +381,16 @@ void addMatrixColumns2(const index_t *matrixColOffsets,
 //    [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
 //    [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
 
-    [computeEncoder setComputePipelineState:_mComputeLowPSO];
+    [computeEncoder setComputePipelineState:_mComputeLowAndLeftColByLowPSO];
     [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
     [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
     [computeEncoder setBuffer:_matrix.rowIndices offset:0 atIndex:2];
     [computeEncoder setBuffer:_low offset:0 atIndex:3];
     [computeEncoder setBuffer:_leftColByLow offset:0 atIndex:4];
+    [computeEncoder setBuffer:_nonZeroCols offset:0 atIndex:5];
 
 
-    MTLSize gridSize = MTLSizeMake(_matrix.n, 1, 1);
+    MTLSize gridSize = MTLSizeMake(_nonZeroColsCount, 1, 1);
 
 
     NSUInteger threadsInThreadgroup = MIN(_mAddMatrixColumnsPSO.maxTotalThreadsPerThreadgroup, _matrix.n);
@@ -421,7 +406,7 @@ void addMatrixColumns2(const index_t *matrixColOffsets,
     NSDate *methodFinish = [NSDate date];
     NSTimeInterval executionTime = [methodFinish timeIntervalSinceDate:methodStart];
     NSLog(@"ComputeLowOnGpu execution time = %f", 1000 * executionTime);
-    _colAdditionsGPUTime += executionTime;
+    _computeLowAndLeftColByLowGPUTime += executionTime;
 }
 
 

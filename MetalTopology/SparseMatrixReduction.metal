@@ -48,14 +48,15 @@ kernel void addMatrixColumns(device const index_t *matrixColOffsets,
 }
 
 
-kernel void computeLow(device const index_t *matrixColOffsets,
+kernel void computeLowAndLeftColByLow(device const index_t *matrixColOffsets,
                        device const index_t *matrixColLengths,
                        device const index_t *matrixRowIndices,
                        device index_t *lows,
                        device index_t *leftColByLow,
+                       device index_t *nonZeroCols,
                        uint2 gridPos [[thread_position_in_grid]])
 {
-    const index_t col = gridPos[0];
+    const index_t col = nonZeroCols[gridPos[0]];
     const index_t length = matrixColLengths[col];
     if(length == 0) {
         lows[col] = MAX_INDEX;
@@ -65,6 +66,6 @@ kernel void computeLow(device const index_t *matrixColOffsets,
     const index_t offset = matrixColOffsets[col];
     const index_t low = matrixRowIndices[offset + length - 1];
     lows[col] = low;
-//    atomic_fetch_min_explicit((device atomic_uint*)(&lows[col]), low, memory_order_relaxed);
+    atomic_fetch_min_explicit((device atomic_uint*)(&leftColByLow[low]), col, memory_order_relaxed);
 }
 
