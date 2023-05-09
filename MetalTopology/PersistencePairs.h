@@ -5,8 +5,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface PersistencePair : NSObject
 
-@property uint32_t left;
-@property uint32_t right;
+@property uint32_t birth;
+@property uint32_t death;
 
 @end
 
@@ -19,7 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (instancetype) initFromFile: (NSString *) path;
 
-- (void) sortPairsByLeft;
+- (void) sortPairsByBirth;
 
 - (void) writeToFile: (NSString *) path;
 

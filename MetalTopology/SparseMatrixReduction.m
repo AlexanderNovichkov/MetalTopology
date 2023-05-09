@@ -364,11 +364,11 @@ void addMatrixColumns2(const uint32_t *matrixColOffsets,
     for(uint32_t i = 0; i < _nonZeroColsCount;i++) {
         uint32_t col = _nonZeroColsPtr[i];
         PersistencePair * pair = [[PersistencePair alloc] init];
-        pair.left = _lowPtr[col];
-        pair.right = col;
+        pair.birth = _lowPtr[col];
+        pair.death = col;
         [pairs.pairs addObject:pair];
     }
-    [pairs sortPairsByLeft];
+    [pairs sortPairsByBirth];
     return pairs;
 }
 

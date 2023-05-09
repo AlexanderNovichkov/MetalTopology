@@ -35,13 +35,13 @@
                 NSLog(@"Error pair # %u", i+1);
                 return nil;
             }
-            pair.left = value;
+            pair.birth = value;
             
             if(![scanner scanUnsignedLongLong:&value]) {
                 NSLog(@"Error pair # %u", i+1);
                 return nil;
             }
-            pair.right = value;
+            pair.death = value;
             
             [_pairs addObject:pair];
         }
@@ -49,9 +49,9 @@
     return self;
 }
 
-- (void) sortPairsByLeft {
+- (void) sortPairsByBirth {
     [_pairs sortUsingComparator:^NSComparisonResult(PersistencePair *a, PersistencePair *b) {
-        return a.left > b.left;
+        return a.birth > b.birth;
     }];
 }
 
@@ -64,7 +64,7 @@
     NSMutableString *description = [[NSMutableString alloc]init];
     [description appendFormat:@"%lu\n", [_pairs count]];
     for (PersistencePair* pair in _pairs) {
-        [description appendFormat:@"%u %u\n", pair.left, pair.right];
+        [description appendFormat:@"%u %u\n", pair.birth, pair.death];
     }
     return description;
 }
