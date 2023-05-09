@@ -46,6 +46,15 @@
     XCTAssertEqualObjects([pairs description], [expectedPairs description]);
 }
 
+- (void)testMatrixHivPersistencePairs {
+    SparseMatrix *matrix = [self readMatrixFromFile:@"matrix_hiv_14_610.0.txt"];
+    SparseMatrixReduction* reduction = [[SparseMatrixReduction alloc] initWithDevice:_mDevice Matrix:matrix];
+    [reduction makeReduction];
+    PersistencePairs *pairs = [reduction getPersistentPairs];
+    PersistencePairs *expectedPairs = [self readPersistencePairsFromFile:@"matrix_hiv_14_610.0_pairs.txt"];
+    XCTAssertEqualObjects([pairs description], [expectedPairs description]);
+}
+
 - (SparseMatrix*) readMatrixFromFile: (NSString*) filename {
     NSBundle *bundle = [NSBundle bundleForClass: [self class]];
     NSString * path = [[bundle URLForResource:filename withExtension: nil] path];
