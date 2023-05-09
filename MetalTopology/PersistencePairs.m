@@ -1,4 +1,5 @@
 #import "PersistencePairs.h"
+#import <Types.h>
 
 @implementation PersistencePair
 @end
@@ -26,10 +27,10 @@
             NSLog(@"First number in file should set number of pairs");
             return nil;
         }
-        uint32_t count = value;
+        index_t count = value;
         
         
-        for(uint32_t i = 0; i < count;i++) {
+        for(index_t i = 0; i < count;i++) {
             PersistencePair * pair = [[PersistencePair alloc] init];
             if(![scanner scanUnsignedLongLong:&value]) {
                 NSLog(@"Error pair # %u", i+1);

@@ -5,7 +5,7 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        NSString * path = @"/Users/alex/Desktop/Education/4-cource/diploma/MetalTopologyBenchmark/datasets/vr_boundary_matrices/h3n2_2_100.0_metal.txt";
+        NSString * path = @"/Users/alex/Desktop/Education/4-cource/diploma/MetalTopologyBenchmark/datasets/vr_boundary_matrices/hiv_14_610.0_metal.txt";
 
         id<MTLDevice> device = MTLCopyAllDevices()[1];
         NSLog([device name]);

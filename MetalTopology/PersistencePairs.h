@@ -1,12 +1,12 @@
 #import <Foundation/Foundation.h>
-
+#import "Types.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface PersistencePair : NSObject
 
-@property uint32_t birth;
-@property uint32_t death;
+@property index_t birth;
+@property index_t death;
 
 @end
 

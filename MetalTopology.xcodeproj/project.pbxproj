@@ -34,6 +34,7 @@
 		FAE846DA2A09AAFA006390BA /* matrix_3_pairs.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE846D92A09AAFA006390BA /* matrix_3_pairs.txt */; };
 		FAE846DF2A09AEA8006390BA /* PersistencePairs.h in Headers */ = {isa = PBXBuildFile; fileRef = FAE846DE2A09AEA8006390BA /* PersistencePairs.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FAE846F42A09B9D5006390BA /* PersistencePairs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAE846E32A09AEBC006390BA /* PersistencePairs.m */; };
+		FAE846F92A0A7190006390BA /* Types.h in Headers */ = {isa = PBXBuildFile; fileRef = FAE846F82A0A7190006390BA /* Types.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,6 +92,7 @@
 		FAE846D92A09AAFA006390BA /* matrix_3_pairs.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_3_pairs.txt; sourceTree = "<group>"; };
 		FAE846DE2A09AEA8006390BA /* PersistencePairs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistencePairs.h; sourceTree = "<group>"; };
 		FAE846E32A09AEBC006390BA /* PersistencePairs.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PersistencePairs.m; sourceTree = "<group>"; };
+		FAE846F82A0A7190006390BA /* Types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Types.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -159,6 +161,7 @@
 				FA22D0802A02A10700B6F933 /* SparseMatrixReduction.metal */,
 				FAE846DE2A09AEA8006390BA /* PersistencePairs.h */,
 				FAE846E32A09AEBC006390BA /* PersistencePairs.m */,
+				FAE846F82A0A7190006390BA /* Types.h */,
 			);
 			path = MetalTopology;
 			sourceTree = "<group>";
@@ -222,6 +225,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FAE846F92A0A7190006390BA /* Types.h in Headers */,
 				FAA1B9F52A070C1E00754167 /* SparseMatrixReduction.h in Headers */,
 				FAE846DF2A09AEA8006390BA /* PersistencePairs.h in Headers */,
 				FA22D00429EC1C9000B6F933 /* MetalTopology.h in Headers */,

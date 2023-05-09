@@ -1,30 +1,34 @@
 #include <metal_stdlib>
+#include <metal_atomic>
+
+#include "Types.h"
+
 
 using namespace metal;
 
-kernel void addMatrixColumns(device const uint32_t *matrixColOffsets,
-                               device const uint32_t *matrixColLengths,
-                               device const uint32_t *matrixRowIndices,
-                               device const uint32_t *resultMatrixColOffsets,
-                               device uint32_t *resultMatrixColLengths,
-                               device uint32_t *resultMatrixRowIndices,
-                               device const uint32_t * colToAdd,
+kernel void addMatrixColumns(device const index_t *matrixColOffsets,
+                               device const index_t *matrixColLengths,
+                               device const index_t *matrixRowIndices,
+                               device const index_t *resultMatrixColOffsets,
+                               device index_t *resultMatrixColLengths,
+                               device index_t *resultMatrixRowIndices,
+                               device const index_t * colToAdd,
                                uint2 gridPos [[thread_position_in_grid]])
 {
-    const uint32_t rightCol = gridPos[0];
-    const uint32_t leftCol = colToAdd[rightCol];
+    const index_t rightCol = gridPos[0];
+    const index_t leftCol = colToAdd[rightCol];
     
-    uint32_t leftColOffsetCur = (leftCol == __UINT32_MAX__) ? __UINT32_MAX__ : matrixColOffsets[leftCol];
-    const uint32_t leftColOffsetEnd = (leftCol == __UINT32_MAX__) ? __UINT32_MAX__ : (leftColOffsetCur + matrixColLengths[leftCol]);
+    index_t leftColOffsetCur = (leftCol == MAX_INDEX) ? MAX_INDEX : matrixColOffsets[leftCol];
+    const index_t leftColOffsetEnd = (leftCol == MAX_INDEX) ? MAX_INDEX : (leftColOffsetCur + matrixColLengths[leftCol]);
     
-    uint32_t rightColOffsetCur = matrixColOffsets[rightCol];
-    const uint32_t rightColOffsetEnd = rightColOffsetCur + matrixColLengths[rightCol];
+    index_t rightColOffsetCur = matrixColOffsets[rightCol];
+    const index_t rightColOffsetEnd = rightColOffsetCur + matrixColLengths[rightCol];
     
-    uint32_t resultColOffsetCur = resultMatrixColOffsets[rightCol];
+    index_t resultColOffsetCur = resultMatrixColOffsets[rightCol];
     
     while (leftColOffsetCur < leftColOffsetEnd || rightColOffsetCur < rightColOffsetEnd) {
-        uint32_t leftRow = (leftColOffsetCur < leftColOffsetEnd) ? matrixRowIndices[leftColOffsetCur] : __UINT32_MAX__;
-        uint32_t rightRow = (rightColOffsetCur < rightColOffsetEnd) ? matrixRowIndices[rightColOffsetCur] : __UINT32_MAX__;
+        index_t leftRow = (leftColOffsetCur < leftColOffsetEnd) ? matrixRowIndices[leftColOffsetCur] : MAX_INDEX;
+        index_t rightRow = (rightColOffsetCur < rightColOffsetEnd) ? matrixRowIndices[rightColOffsetCur] : MAX_INDEX;
         
         if(leftRow < rightRow) {
             resultMatrixRowIndices[resultColOffsetCur] = leftRow;
@@ -42,3 +46,25 @@ kernel void addMatrixColumns(device const uint32_t *matrixColOffsets,
     
     resultMatrixColLengths[rightCol] = resultColOffsetCur - resultMatrixColOffsets[rightCol];
 }
+
+
+kernel void computeLow(device const index_t *matrixColOffsets,
+                       device const index_t *matrixColLengths,
+                       device const index_t *matrixRowIndices,
+                       device index_t *lows,
+                       device index_t *leftColByLow,
+                       uint2 gridPos [[thread_position_in_grid]])
+{
+    const index_t col = gridPos[0];
+    const index_t length = matrixColLengths[col];
+    if(length == 0) {
+        lows[col] = MAX_INDEX;
+        return;
+    }
+    
+    const index_t offset = matrixColOffsets[col];
+    const index_t low = matrixRowIndices[offset + length - 1];
+    lows[col] = low;
+//    atomic_fetch_min_explicit((device atomic_uint*)(&lows[col]), low, memory_order_relaxed);
+}
+
