@@ -40,7 +40,6 @@
             _colOffsetsPtr[col] = rowIndicesPos;
             
             for(index_t i = 0; i < _colLengthsPtr[col];i++) {
-                unsigned long long row;
                 if(![scanner scanUnsignedLongLong:&value]) {
                     NSLog(@"Error reading element # %u for column # %u with length %llu", i, col, _colLengthsPtr[col]);
                     return nil;

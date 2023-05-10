@@ -31,8 +31,10 @@ int main(int argc, const char * argv[]) {
         NSLog(@"computationTimeTotal = %f s", reduction.computationTimeTotal);
         NSLog(@"computeLowAndLeftColByLowGPUTime = %f s", reduction.computeLowAndLeftColByLowGPUTime);
         NSLog(@"computeNonZeroColsGPUTime = %f s", reduction.computeNonZeroColsGPUTime);
-        NSLog(@"colAdditionsGPUTime = %f s", reduction.colAdditionsGPUTime);
-        
+        NSLog(@"computeLeftColsAndLeftRightPairsGpuTime = %f s", reduction.computeLeftColsAndLeftRightPairsGpuTime);
+        NSLog(@"computeMatrixColLengthsGpuTime = %f s", reduction.computeMatrixColLengthsGpuTime);
+        NSLog(@"executeLeftRightAdditionsGpuTime = %f s", reduction.executeLeftRightAdditionsGpuTime);
+        NSLog(@"executeCopyLeftColumnsOnGpuTime = %f s", reduction.executeCopyLeftColumnsOnGpuTime);
     }
     return 0;
 }
