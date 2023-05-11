@@ -35,6 +35,7 @@ int main(int argc, const char * argv[]) {
         NSLog(@"computeMatrixColLengthsGpuTime = %f s", reduction.computeMatrixColLengthsGpuTime);
         NSLog(@"executeLeftRightAdditionsGpuTime = %f s", reduction.executeLeftRightAdditionsGpuTime);
         NSLog(@"executeCopyLeftColumnsOnGpuTime = %f s", reduction.executeCopyLeftColumnsOnGpuTime);
+        NSLog(@"computeMatrixColOffsetsGpuTime = %f s", reduction.computeMatrixColOffsetsGpuTime);
     }
     return 0;
 }

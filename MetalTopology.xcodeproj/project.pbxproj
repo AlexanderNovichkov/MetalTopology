@@ -37,6 +37,8 @@
 		FAE846F92A0A7190006390BA /* Types.h in Headers */ = {isa = PBXBuildFile; fileRef = FAE846F82A0A7190006390BA /* Types.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FAE847042A0A9036006390BA /* matrix_hiv_14_610.0.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE847032A0A9036006390BA /* matrix_hiv_14_610.0.txt */; };
 		FAE847092A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE847082A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt */; };
+		FAE847112A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE847102A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt */; };
+		FAE847162A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE847152A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +99,8 @@
 		FAE846F82A0A7190006390BA /* Types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Types.h; sourceTree = "<group>"; };
 		FAE847032A0A9036006390BA /* matrix_hiv_14_610.0.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_hiv_14_610.0.txt; sourceTree = "<group>"; };
 		FAE847082A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_hiv_14_610.0_pairs.txt; sourceTree = "<group>"; };
+		FAE847102A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_h3n2_2_30.0.txt; sourceTree = "<group>"; };
+		FAE847152A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_h3n2_2_30.0_pairs.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -220,6 +224,8 @@
 				FAE846D92A09AAFA006390BA /* matrix_3_pairs.txt */,
 				FAE847032A0A9036006390BA /* matrix_hiv_14_610.0.txt */,
 				FAE847082A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt */,
+				FAE847102A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt */,
+				FAE847152A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt */,
 			);
 			path = static;
 			sourceTree = "<group>";
@@ -349,9 +355,11 @@
 			files = (
 				FAA1B9EC2A05685C00754167 /* matrix_2.txt in Resources */,
 				FAE846DA2A09AAFA006390BA /* matrix_3_pairs.txt in Resources */,
+				FAE847112A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt in Resources */,
 				FA22D0862A043EC900B6F933 /* matrix_1_reduced.txt in Resources */,
 				FA22D07629FFF52600B6F933 /* matrix_1.txt in Resources */,
 				FAE847092A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt in Resources */,
+				FAE847162A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt in Resources */,
 				FAA1B9F12A05687000754167 /* matrix_2_reduced.txt in Resources */,
 				FAE847042A0A9036006390BA /* matrix_hiv_14_610.0.txt in Resources */,
 				FAE846D52A09AAE7006390BA /* matrix_3.txt in Resources */,

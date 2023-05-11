@@ -15,32 +15,30 @@ kernel void executeLeftRightAdditions(device const index_t *matrixColOffsets,
                                device const LeftRightPair * leftRightPairs,
                                uint pairIdx [[thread_position_in_grid]])
 {
-    const index_t leftCol = leftRightPairs[pairIdx].leftCol;
-    const index_t rightCol = leftRightPairs[pairIdx].rightCol;
-
-    index_t leftColOffsetCur = (leftCol == MAX_INDEX) ? MAX_INDEX : matrixColOffsets[leftCol];
-    const index_t leftColOffsetEnd = (leftCol == MAX_INDEX) ? MAX_INDEX : (leftColOffsetCur + matrixColLengths[leftCol]);
-
-    index_t rightColOffsetCur = matrixColOffsets[rightCol];
-    const index_t rightColOffsetEnd = rightColOffsetCur + matrixColLengths[rightCol];
-
-    index_t resultColOffsetCur = resultMatrixColOffsets[rightCol];
-
-    while (leftColOffsetCur < leftColOffsetEnd || rightColOffsetCur < rightColOffsetEnd) {
-        index_t leftRow = (leftColOffsetCur < leftColOffsetEnd) ? matrixRowIndices[leftColOffsetCur] : MAX_INDEX;
-        index_t rightRow = (rightColOffsetCur < rightColOffsetEnd) ? matrixRowIndices[rightColOffsetCur] : MAX_INDEX;
-
-        if(leftRow < rightRow) {
-            resultMatrixRowIndices[resultColOffsetCur] = leftRow;
-            leftColOffsetCur++;
-            resultColOffsetCur++;
-        } else if(leftRow > rightRow) {
-            resultMatrixRowIndices[resultColOffsetCur] = rightRow;
-            rightColOffsetCur++;
-            resultColOffsetCur++;
+    const uint32_t rightCol = leftRightPairs[pairIdx].rightCol;
+    const uint32_t leftCol = leftRightPairs[pairIdx].leftCol;
+    
+    
+    
+    uint32_t leftColOffset = matrixColOffsets[leftCol];
+    const uint32_t leftColOffsetEnd = (leftColOffset + matrixColLengths[leftCol]);
+    
+    const uint32_t rightColOffsetEnd = matrixColOffsets[rightCol] + matrixColLengths[rightCol];
+    
+    uint32_t resultColOffsetCur = resultMatrixColOffsets[rightCol];
+    
+    for(uint32_t rightColOffset = matrixColOffsets[rightCol]; rightColOffset < rightColOffsetEnd; rightColOffset++) {
+        uint32_t rightRow = matrixRowIndices[rightColOffset];
+        while(leftColOffset < leftColOffsetEnd && matrixRowIndices[leftColOffset] < rightRow) {
+                resultMatrixRowIndices[resultColOffsetCur] = matrixRowIndices[leftColOffset];
+                leftColOffset++;
+                resultColOffsetCur++;
+        }
+        if(matrixRowIndices[leftColOffset] == rightRow) {
+            leftColOffset++;
         } else {
-            leftColOffsetCur++;
-            rightColOffsetCur++;
+            resultMatrixRowIndices[resultColOffsetCur] = rightRow;
+            resultColOffsetCur++;
         }
     }
 

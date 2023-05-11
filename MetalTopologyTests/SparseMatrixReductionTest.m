@@ -55,16 +55,29 @@
     XCTAssertEqualObjects([pairs description], [expectedPairs description]);
 }
 
+- (void)testMatrixh3n2PersistencePairs {
+    SparseMatrix *matrix = [self readMatrixFromFile:@"matrix_h3n2_2_30.0.txt"];
+    SparseMatrixReduction* reduction = [[SparseMatrixReduction alloc] initWithDevice:_mDevice Matrix:matrix];
+    [reduction makeReduction];
+    PersistencePairs *pairs = [reduction getPersistentPairs];
+    PersistencePairs *expectedPairs = [self readPersistencePairsFromFile:@"matrix_h3n2_2_30.0_pairs.txt"];
+    XCTAssertEqualObjects([pairs description], [expectedPairs description]);
+}
+
 - (SparseMatrix*) readMatrixFromFile: (NSString*) filename {
     NSBundle *bundle = [NSBundle bundleForClass: [self class]];
     NSString * path = [[bundle URLForResource:filename withExtension: nil] path];
-    return [[SparseMatrix alloc] initWithDevice:_mDevice FromFile:path];
+    SparseMatrix *matrix =  [[SparseMatrix alloc] initWithDevice:_mDevice FromFile:path];
+    assert(matrix != nil);
+    return matrix;
 }
 
 - (PersistencePairs*) readPersistencePairsFromFile: (NSString*) filename {
     NSBundle *bundle = [NSBundle bundleForClass: [self class]];
     NSString * path = [[bundle URLForResource:filename withExtension: nil] path];
-    return [[PersistencePairs alloc] initFromFile:path];
+    PersistencePairs*pairs = [[PersistencePairs alloc] initFromFile:path];
+    assert(pairs != nil);
+    return pairs;
 }
 
 @end

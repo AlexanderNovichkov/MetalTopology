@@ -303,11 +303,12 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
             
 //            [self MakeClearing];
             
-            if( [self isMatrixReduced]) {
-                break;
-            }
             
             [self computeLeftColsAndLeftRightPairsOnGPU];
+            
+            if( *_leftRightPairsCountPtr == 0) {
+                break;
+            }
             
             [self makeLeftRightColsAdditions];
             
@@ -321,12 +322,6 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     
     return _matrix;
 }
-
-// 1) compute left and right cols
-// 2) compute new matrix.length
-// 3) compute new prefixes
-// 4) copy left
-// 5) add right
 
 
 //- (void) MakeClearing{
@@ -348,19 +343,6 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
 //}
 
 
-- (bool) isMatrixReduced {
-    for(index_t col = 0; col < _matrix.n; col++) {
-        index_t low = _lowPtr[col];
-        if(low == MAX_INDEX) {
-            continue;
-        }
-        if(_leftColByLowPtr[low] != col) {
-            return false;
-        }
-    }
-    return true;
-}
-
 - (void) makeLeftRightColsAdditions {
     [self computeMatrixColLengthsOnGpu];
     [self computeMatrixColOffsets];
@@ -377,7 +359,7 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
         
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"computeMatrixColOffsets execution time = %f", 1000 * executionTime);
-    _executeLeftRightAdditionsGpuTime += executionTime;
+    _computeMatrixColOffsetsGpuTime += executionTime;
 }
 
 - (void) computeMatrixRowIndices {
