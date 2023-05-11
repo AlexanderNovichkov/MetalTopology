@@ -3,6 +3,7 @@
 
 #define MAX_INDEX UINT_MAX
 
+#define OFFSETS_BLOCK_SIZE 64
 
 struct LeftRightPair {
     index_t leftCol;

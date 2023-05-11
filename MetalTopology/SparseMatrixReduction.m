@@ -85,6 +85,8 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     id<MTLComputePipelineState> _mComputeLeftColsAndLeftRightPairsPSO;
     id<MTLComputePipelineState> _mComputeMatrixColLengthsPSO;
     id<MTLComputePipelineState> _mCopyLeftColumnsPSO;
+    id<MTLComputePipelineState> _mComputeMatrixOffsetsBlockSumsPSO;
+    id<MTLComputePipelineState> _mComputeMatrixOffsetsPSO;
     
     // State variables, updated every iteration of algorithm
     SparseMatrix * _matrix;
@@ -117,6 +119,13 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     SparseMatrix * _matrixToSumCols;
     id<MTLBuffer> _nonZeroColsResult;
     index_t* _nonZeroColsResultPtr;
+    
+    index_t _matrixOffsetsBlocksCount;
+    id<MTLBuffer> _matrixOffsetsBlockSums;
+    index_t*  _matrixOffsetsBlockSumsPtr;
+    
+    id<MTLBuffer> _matrixSize;
+    index_t*  _matrixNPtr;
 }
 
 - (instancetype) initWithDevice: (id<MTLDevice>) device Matrix: (SparseMatrix*) matrix
@@ -214,7 +223,32 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
             return nil;
         }
         
+        id<MTLFunction> computeMatrixOffsetsBlockSums = [defaultLibrary newFunctionWithName:@"computeMatrixOffsetsBlockSums"];
+        if (computeMatrixOffsetsBlockSums == nil)
+        {
+            NSLog(@"Failed to find metal function computeMatrixOffsetsBlockSums");
+            return nil;
+        }
+        _mComputeMatrixOffsetsBlockSumsPSO = [_mDevice newComputePipelineStateWithFunction: computeMatrixOffsetsBlockSums error:&error];
+        if (_mComputeMatrixOffsetsBlockSumsPSO == nil)
+        {
+            NSLog(@"Failed to created pipeline state object, error %@.", error);
+            return nil;
+        }
         
+        
+        id<MTLFunction> computeMatrixOffsets = [defaultLibrary newFunctionWithName:@"computeMatrixOffsets"];
+        if (computeMatrixOffsets == nil)
+        {
+            NSLog(@"Failed to find metal function computeMatrixOffsets");
+            return nil;
+        }
+        _mComputeMatrixOffsetsPSO = [_mDevice newComputePipelineStateWithFunction: computeMatrixOffsets error:&error];
+        if (_mComputeMatrixOffsetsPSO == nil)
+        {
+            NSLog(@"Failed to created pipeline state object, error %@.", error);
+            return nil;
+        }
 
         
         _mCommandQueue = [_mDevice newCommandQueue];
@@ -271,8 +305,16 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
         
         _matrixToSumCols = [[SparseMatrix alloc] initWithDevice: _mDevice N:_matrix.n];
         
+        
+        _matrixOffsetsBlocksCount = (matrix.n + OFFSETS_BLOCK_SIZE - 1) / OFFSETS_BLOCK_SIZE;
+        _matrixOffsetsBlockSums = [_mDevice newBufferWithLength: _matrixOffsetsBlocksCount * sizeof(index_t) options:MTLResourceStorageModeShared];
+        _matrixOffsetsBlockSumsPtr = _matrixOffsetsBlockSums.contents;
+        
         _nonZeroColsResult = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t) options:MTLResourceStorageModeShared];
         _nonZeroColsResultPtr = _nonZeroColsResult.contents;
+        
+        _matrixSize = [_mDevice newBufferWithLength: sizeof(index_t) options:MTLResourceStorageModeShared];
+        *((index_t*) _matrixSize.contents) = matrix.n;
     }
     
     return self;
@@ -352,14 +394,74 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
 - (void)computeMatrixColOffsets {
     NSLog(@"Start method computeMatrixColOffsets");
     NSDate *start = [NSDate date];
+    
+    [self computeMatrixOffsetsBlockSumsOnGpu];
 
-    for(index_t col = 1; col < _matrix.n; col++) {
-        _matrixToSumCols.colOffsetsPtr[col] = _matrixToSumCols.colOffsetsPtr[col - 1] + _matrixToSumCols.colLengthsPtr[col - 1];
+    for(index_t blockId = 1; blockId < _matrixOffsetsBlocksCount; blockId ++){
+        _matrixOffsetsBlockSumsPtr[blockId] += _matrixOffsetsBlockSumsPtr[blockId - 1];
     }
-        
+
+    [self computeMatrixOffsetsOnGpu];
+    
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"computeMatrixColOffsets execution time = %f", 1000 * executionTime);
     _computeMatrixColOffsetsGpuTime += executionTime;
+}
+
+- (void) computeMatrixOffsetsBlockSumsOnGpu {
+    NSLog(@"Start method computeMatrixOffsetsBlockSumsOnGpu");
+    NSDate *start = [NSDate date];
+    id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
+    assert(commandBuffer != nil);
+
+    id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
+    assert(computeEncoder != nil);
+    [computeEncoder setComputePipelineState:_mComputeMatrixOffsetsBlockSumsPSO];
+    [computeEncoder setBuffer:_matrixToSumCols.colLengths offset:0 atIndex:0];
+    [computeEncoder setBuffer:_matrixOffsetsBlockSums offset:0 atIndex:1];
+    [computeEncoder setBuffer:_matrixSize offset:0 atIndex:2];
+
+
+    MTLSize gridSize = MTLSizeMake(_matrixOffsetsBlocksCount, 1, 1);
+    NSUInteger threadsInThreadgroup = MIN(_mComputeMatrixOffsetsBlockSumsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
+    MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
+
+    [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+    [computeEncoder endEncoding];
+
+    [commandBuffer commit];
+    [commandBuffer waitUntilCompleted];
+
+    NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
+    NSLog(@"computeMatrixOffsetsBlockSumsOnGpu execution time = %f", 1000 * executionTime);
+}
+
+- (void) computeMatrixOffsetsOnGpu {
+    NSLog(@"Start method computeMatrixOffsetsOnGpu");
+    NSDate *start = [NSDate date];
+    id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
+    assert(commandBuffer != nil);
+
+    id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
+    assert(computeEncoder != nil);
+    [computeEncoder setComputePipelineState:_mComputeMatrixOffsetsPSO];
+    [computeEncoder setBuffer:_matrixToSumCols.colLengths offset:0 atIndex:0];
+    [computeEncoder setBuffer:_matrixOffsetsBlockSums offset:0 atIndex:1];
+    [computeEncoder setBuffer:_matrixSize offset:0 atIndex:2];
+    [computeEncoder setBuffer:_matrixToSumCols.colOffsets offset:0 atIndex:3];
+
+    MTLSize gridSize = MTLSizeMake(_matrixOffsetsBlocksCount, 1, 1);
+    NSUInteger threadsInThreadgroup = MIN(_mComputeMatrixOffsetsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
+    MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
+
+    [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+    [computeEncoder endEncoding];
+
+    [commandBuffer commit];
+    [commandBuffer waitUntilCompleted];
+
+    NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
+    NSLog(@"computeMatrixOffsetsOnGpu execution time = %f", 1000 * executionTime);
 }
 
 - (void) computeMatrixRowIndices {
@@ -633,7 +735,5 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     NSLog(@"computeNonZeroColsGPUTime execution time = %f", 1000 * executionTime);
     _computeNonZeroColsGPUTime += executionTime;
 }
-
-// 10587057
 
 @end

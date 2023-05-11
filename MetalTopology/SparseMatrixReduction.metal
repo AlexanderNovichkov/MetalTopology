@@ -6,6 +6,35 @@
 
 using namespace metal;
 
+kernel void computeMatrixOffsetsBlockSums(device const index_t *resultMatrixColLengths,
+                                    device index_t *matrixOffsetsBlockSums,
+                                    device const index_t *matrixSize,
+                                    uint blockId [[thread_position_in_grid]])
+{
+    index_t colBegin = blockId * OFFSETS_BLOCK_SIZE;
+    index_t colEnd =  min(colBegin + OFFSETS_BLOCK_SIZE, *matrixSize);
+    index_t sum = 0;
+    for(index_t col = colBegin; col < colEnd; col++) {
+        sum += resultMatrixColLengths[col];
+    }
+    matrixOffsetsBlockSums[blockId] = sum;
+}
+
+kernel void computeMatrixOffsets(device const index_t *resultMatrixColLengths,
+                                device const index_t *matrixOffsetsBlockPrefixSums,
+                                device const index_t * matrixSize,
+                                device index_t *resultMatrixColOffsets,
+                                uint blockId [[thread_position_in_grid]])
+{
+    index_t colBegin = blockId * OFFSETS_BLOCK_SIZE;
+    index_t colEnd =  min(colBegin + OFFSETS_BLOCK_SIZE, *matrixSize);
+    index_t offset = (blockId == 0) ? 0 : matrixOffsetsBlockPrefixSums[blockId-1];
+    for(index_t col = colBegin; col < colEnd; col++) {
+        resultMatrixColOffsets[col] = offset;
+        offset += resultMatrixColLengths[col];
+    }
+}
+
 kernel void executeLeftRightAdditions(device const index_t *matrixColOffsets,
                                device const index_t *matrixColLengths,
                                device const index_t *matrixRowIndices,
