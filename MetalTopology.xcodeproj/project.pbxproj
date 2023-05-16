@@ -22,10 +22,8 @@
 		FA22D04F29EC31B800B6F933 /* MetalTopology.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA22CFF329EC1C9000B6F933 /* MetalTopology.framework */; };
 		FA22D06029FD312200B6F933 /* SparseMatrix.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D05F29FD312200B6F933 /* SparseMatrix.m */; };
 		FA22D06F29FFF01A00B6F933 /* SparseMatrixTest.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D06E29FFF01A00B6F933 /* SparseMatrixTest.m */; };
-		FA22D07629FFF52600B6F933 /* matrix_1.txt in Resources */ = {isa = PBXBuildFile; fileRef = FA22D06629FFE8A700B6F933 /* matrix_1.txt */; };
 		FA22D07B2A029FC600B6F933 /* SparseMatrixReduction.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D07A2A029FC600B6F933 /* SparseMatrixReduction.m */; };
 		FA22D0812A02A10700B6F933 /* SparseMatrixReduction.metal in Sources */ = {isa = PBXBuildFile; fileRef = FA22D0802A02A10700B6F933 /* SparseMatrixReduction.metal */; };
-		FA22D0862A043EC900B6F933 /* matrix_1_reduced.txt in Resources */ = {isa = PBXBuildFile; fileRef = FA22D0852A043EC900B6F933 /* matrix_1_reduced.txt */; };
 		FA22D08B2A0440BC00B6F933 /* SparseMatrixReductionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D08A2A0440BC00B6F933 /* SparseMatrixReductionTest.m */; };
 		FAA1B9EC2A05685C00754167 /* matrix_2.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAA1B9EB2A05685C00754167 /* matrix_2.txt */; };
 		FAA1B9F12A05687000754167 /* matrix_2_reduced.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAA1B9F02A05687000754167 /* matrix_2_reduced.txt */; };
@@ -39,6 +37,8 @@
 		FAE847092A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE847082A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt */; };
 		FAE847112A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE847102A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt */; };
 		FAE847162A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE847152A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt */; };
+		FAE8471F2A13DB2A006390BA /* matrix_1.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE8471D2A13DB2A006390BA /* matrix_1.txt */; };
+		FAE847202A13DB2A006390BA /* matrix_1_reduced.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE8471E2A13DB2A006390BA /* matrix_1_reduced.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -83,12 +83,10 @@
 		FA22D04729EC319100B6F933 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		FA22D05F29FD312200B6F933 /* SparseMatrix.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrix.m; sourceTree = "<group>"; };
 		FA22D06429FD313100B6F933 /* SparseMatrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SparseMatrix.h; sourceTree = "<group>"; };
-		FA22D06629FFE8A700B6F933 /* matrix_1.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_1.txt; sourceTree = "<group>"; };
 		FA22D06E29FFF01A00B6F933 /* SparseMatrixTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrixTest.m; sourceTree = "<group>"; };
 		FA22D07A2A029FC600B6F933 /* SparseMatrixReduction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrixReduction.m; sourceTree = "<group>"; };
 		FA22D07F2A029FDA00B6F933 /* SparseMatrixReduction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SparseMatrixReduction.h; sourceTree = "<group>"; };
 		FA22D0802A02A10700B6F933 /* SparseMatrixReduction.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SparseMatrixReduction.metal; sourceTree = "<group>"; };
-		FA22D0852A043EC900B6F933 /* matrix_1_reduced.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_1_reduced.txt; sourceTree = "<group>"; };
 		FA22D08A2A0440BC00B6F933 /* SparseMatrixReductionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrixReductionTest.m; sourceTree = "<group>"; };
 		FAA1B9EB2A05685C00754167 /* matrix_2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_2.txt; sourceTree = "<group>"; };
 		FAA1B9F02A05687000754167 /* matrix_2_reduced.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_2_reduced.txt; sourceTree = "<group>"; };
@@ -101,6 +99,8 @@
 		FAE847082A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_hiv_14_610.0_pairs.txt; sourceTree = "<group>"; };
 		FAE847102A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_h3n2_2_30.0.txt; sourceTree = "<group>"; };
 		FAE847152A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_h3n2_2_30.0_pairs.txt; sourceTree = "<group>"; };
+		FAE8471D2A13DB2A006390BA /* matrix_1.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = matrix_1.txt; sourceTree = "<group>"; };
+		FAE8471E2A13DB2A006390BA /* matrix_1_reduced.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = matrix_1_reduced.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -216,8 +216,8 @@
 		FA22D06529FFE83B00B6F933 /* static */ = {
 			isa = PBXGroup;
 			children = (
-				FA22D06629FFE8A700B6F933 /* matrix_1.txt */,
-				FA22D0852A043EC900B6F933 /* matrix_1_reduced.txt */,
+				FAE8471E2A13DB2A006390BA /* matrix_1_reduced.txt */,
+				FAE8471D2A13DB2A006390BA /* matrix_1.txt */,
 				FAA1B9EB2A05685C00754167 /* matrix_2.txt */,
 				FAA1B9F02A05687000754167 /* matrix_2_reduced.txt */,
 				FAE846D42A09AAE7006390BA /* matrix_3.txt */,
@@ -353,15 +353,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FAE8471F2A13DB2A006390BA /* matrix_1.txt in Resources */,
 				FAA1B9EC2A05685C00754167 /* matrix_2.txt in Resources */,
 				FAE846DA2A09AAFA006390BA /* matrix_3_pairs.txt in Resources */,
 				FAE847112A0D3B8B006390BA /* matrix_h3n2_2_30.0.txt in Resources */,
-				FA22D0862A043EC900B6F933 /* matrix_1_reduced.txt in Resources */,
-				FA22D07629FFF52600B6F933 /* matrix_1.txt in Resources */,
 				FAE847092A0A904B006390BA /* matrix_hiv_14_610.0_pairs.txt in Resources */,
 				FAE847162A0D3B9E006390BA /* matrix_h3n2_2_30.0_pairs.txt in Resources */,
 				FAA1B9F12A05687000754167 /* matrix_2_reduced.txt in Resources */,
 				FAE847042A0A9036006390BA /* matrix_hiv_14_610.0.txt in Resources */,
+				FAE847202A13DB2A006390BA /* matrix_1_reduced.txt in Resources */,
 				FAE846D52A09AAE7006390BA /* matrix_3.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

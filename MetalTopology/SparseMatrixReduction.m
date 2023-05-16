@@ -260,8 +260,17 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
         
         _matrix = matrix;
         
-        // TODO: change buf size to 1
-        _nonZeroColsCount = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t) options:MTLResourceStorageModeShared];
+        
+        for(index_t col = 0; col < _matrix.n;col++) {
+            index_t length = _matrix.colLengthsPtr[col];
+            if(length !=0){
+                index_t offset = _matrix.colOffsetsPtr[col];
+                index_t low = _matrix.rowIndicesPtr[offset + length - 1];
+                matrix.colLengthsPtr[low] = 0;
+            }
+        }
+        
+        _nonZeroColsCount = [_mDevice newBufferWithLength:sizeof(index_t) options:MTLResourceStorageModeShared];
         _nonZeroColsCountPtr =_nonZeroColsCount.contents;
         _nonZeroCols = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t) options:MTLResourceStorageModeShared];
         _nonZeroColsPtr = _nonZeroCols.contents;
@@ -364,26 +373,6 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     
     return _matrix;
 }
-
-
-//- (void) MakeClearing{
-//    NSLog(@"Start method MakeClearing");
-//    index_t cleared = 0;
-//    for(index_t col = 0; col < _matrix.n; col++) {
-//        index_t colToZero = _lowPtr[col];
-//        if(colToZero == MAX_INDEX) {
-//            continue;
-//        }
-//        if(_matrix.colLengthsPtr[colToZero] == 0) {
-//            continue;
-//        }
-//        cleared++;
-//        _lowPtr[colToZero] = MAX_INDEX;
-//        _matrix.colLengthsPtr[colToZero] = 0;
-//    }
-//    NSLog(@"Cleared columns: %u", cleared);
-//}
-
 
 - (void) makeLeftRightColsAdditions {
     [self computeMatrixColLengthsOnGpu];
@@ -675,10 +664,10 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     [computeEncoder setBuffer:_matrix.rowIndices offset:0 atIndex:2];
     [computeEncoder setBuffer:_low offset:0 atIndex:3];
     [computeEncoder setBuffer:_leftColByLow offset:0 atIndex:4];
-    [computeEncoder setBuffer:_nonZeroCols offset:0 atIndex:5];
+    [computeEncoder setBuffer:_leftRightPairs offset:0 atIndex:5];
 
 
-    MTLSize gridSize = MTLSizeMake(*_nonZeroColsCountPtr, 1, 1);
+    MTLSize gridSize = MTLSizeMake(*_leftRightPairsCountPtr, 1, 1);
 
 
     NSUInteger threadsInThreadgroup = MIN(_mComputeLowAndLeftColByLowPSO.maxTotalThreadsPerThreadgroup, _matrix.n);

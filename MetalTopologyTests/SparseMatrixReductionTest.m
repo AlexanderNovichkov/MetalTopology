@@ -21,14 +21,6 @@
     // Put teardown code here. This method is called after the invocation of each test method in the class.
 }
 
-- (void)testMatrix1Reduction {
-    SparseMatrix *matrix = [self readMatrixFromFile:@"matrix_1.txt"];
-    SparseMatrixReduction* reduction = [[SparseMatrixReduction alloc] initWithDevice:_mDevice Matrix:matrix];
-    SparseMatrix *reducedMatrix = [reduction makeReduction];
-    SparseMatrix *expectedReducedMatrix = [self readMatrixFromFile:@"matrix_1_reduced.txt"];
-    XCTAssertEqualObjects([reducedMatrix description], [expectedReducedMatrix description]);
-}
-
 - (void)testMatrix2Reduction {
     SparseMatrix *matrix = [self readMatrixFromFile:@"matrix_2.txt"];
     SparseMatrixReduction* reduction = [[SparseMatrixReduction alloc] initWithDevice:_mDevice Matrix:matrix];

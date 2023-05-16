@@ -97,14 +97,14 @@ kernel void copyLeftColumns(device const index_t *matrixColOffsets,
 
 
 kernel void computeLowAndLeftColByLow(device const index_t *matrixColOffsets,
-                       device const index_t *matrixColLengths,
+                       device index_t *matrixColLengths,
                        device const index_t *matrixRowIndices,
                        device index_t *lows,
-                       device index_t *leftColByLow,
-                       device index_t *nonZeroCols,
-                       uint nonZeroColsIdx [[thread_position_in_grid]])
+                       device atomic_index_t *leftColByLow,
+                       device struct LeftRightPair* leftRightPairs,
+                       uint pairIdx [[thread_position_in_grid]])
 {
-    const index_t col = nonZeroCols[nonZeroColsIdx];
+    const index_t col = leftRightPairs[pairIdx].rightCol;
     const index_t length = matrixColLengths[col];
     if(length == 0) {
         lows[col] = MAX_INDEX;
@@ -112,14 +112,14 @@ kernel void computeLowAndLeftColByLow(device const index_t *matrixColOffsets,
     }
     
     const index_t offset = matrixColOffsets[col];
-    const index_t low = matrixRowIndices[offset + length - 1];
-    lows[col] = low;
-    atomic_fetch_min_explicit((device atomic_index_t*)(&leftColByLow[low]), col, memory_order_relaxed);
+    const index_t l = matrixRowIndices[offset + length - 1];
+    lows[col] = l;
+    atomic_fetch_min_explicit(&leftColByLow[l], col, memory_order_relaxed);
 }
 
 
 kernel void computeNonZeroCols(device const index_t *matrixColLengths,
-                                      device index_t *nonZeroCols,
+                                      device const index_t *nonZeroCols,
                                       device index_t *nonZeroColsResult,
                                       device atomic_index_t * nonZeroColsCount,
                                       uint idx [[thread_position_in_grid]])
@@ -132,13 +132,13 @@ kernel void computeNonZeroCols(device const index_t *matrixColLengths,
 }
 
 
-kernel void computeLeftColsAndLeftRightPairs(device index_t *lows,
-                                             device index_t *leftColByLow,
+kernel void computeLeftColsAndLeftRightPairs(device const index_t *lows,
+                                             device const index_t *leftColByLow,
                                              device index_t *leftCols,
                                              device atomic_index_t *leftColsCount,
                                              device struct LeftRightPair* leftRightPairs,
                                              device atomic_index_t *leftRightPairsCount,
-                                             device index_t *nonZeroCols,
+                                             device const index_t *nonZeroCols,
                                              uint nonZeroColsIdx [[thread_position_in_grid]])
 {
     const index_t col = nonZeroCols[nonZeroColsIdx];
@@ -157,7 +157,7 @@ kernel void computeLeftColsAndLeftRightPairs(device index_t *lows,
 
 kernel void computeMatrixColLengths(device const index_t *matrixColLengths,
                                     device index_t *resultMatrixColLengths,
-                                    device struct LeftRightPair *leftRightPairs,
+                                    device const struct LeftRightPair *leftRightPairs,
                                     uint pairIdx [[thread_position_in_grid]])
 {
     const LeftRightPair pair = leftRightPairs[pairIdx];
