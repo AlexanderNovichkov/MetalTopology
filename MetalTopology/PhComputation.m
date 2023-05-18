@@ -9,70 +9,12 @@ void swapIndexPtrs ( index_t** ptrA, index_t** ptrB ) {
      *ptrB = temp;
  }
 
+void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptrB ) {
+    SparseMatrix *temp = *ptrA;
+     *ptrA = *ptrB;
+     *ptrB = temp;
+ }
 
-void computeLeftColsAndLeftRightPairs2( index_t *lows,
-                                              index_t *leftColByLow,
-                                              index_t *leftCols,
-                                              index_t *leftColsCount,
-                                              struct LeftRightPair* leftRightPairs,
-                                              index_t *leftRightPairsCount,
-                                              index_t *nonZeroCols,
-                                              uint nonZeroColsIdx)
-{
-    const index_t col = nonZeroCols[nonZeroColsIdx];
-    const index_t low = lows[col];
-    const index_t left = leftColByLow[low];
-    if(left == col) {
-        index_t pos =  (*leftColsCount)++;
-        leftCols[pos] = col;
-    } else {
-        index_t pos =  (*leftRightPairsCount)++;
-        leftRightPairs[pos].leftCol = left;
-        leftRightPairs[pos].rightCol = col;
-    }
-}
-
-
-void executeLeftRightAdditions2(const index_t *matrixColOffsets,
-                                       const index_t *matrixColLengths,
-                               const index_t *matrixRowIndices,
-                                const index_t *resultMatrixColOffsets,
-                                index_t *resultMatrixColLengths,
-                                index_t *resultMatrixRowIndices,
-                                const struct LeftRightPair * leftRightPairs,
-                               uint pairIdx)
-{
-    const index_t leftCol = leftRightPairs[pairIdx].leftCol;
-    const index_t rightCol = leftRightPairs[pairIdx].rightCol;
-    
-    index_t leftColOffsetCur = (leftCol == MAX_INDEX) ? MAX_INDEX : matrixColOffsets[leftCol];
-    const index_t leftColOffsetEnd = (leftCol == MAX_INDEX) ? MAX_INDEX : (leftColOffsetCur + matrixColLengths[leftCol]);
-    
-    index_t rightColOffsetCur = matrixColOffsets[rightCol];
-    const index_t rightColOffsetEnd = rightColOffsetCur + matrixColLengths[rightCol];
-    
-    index_t resultColOffsetCur = resultMatrixColOffsets[rightCol];
-    
-    while (leftColOffsetCur < leftColOffsetEnd || rightColOffsetCur < rightColOffsetEnd) {
-        index_t leftRow = (leftColOffsetCur < leftColOffsetEnd) ? matrixRowIndices[leftColOffsetCur] : MAX_INDEX;
-        index_t rightRow = (rightColOffsetCur < rightColOffsetEnd) ? matrixRowIndices[rightColOffsetCur] : MAX_INDEX;
-        
-        if(leftRow < rightRow) {
-            resultMatrixRowIndices[resultColOffsetCur] = leftRow;
-            leftColOffsetCur++;
-            resultColOffsetCur++;
-        } else if(leftRow > rightRow) {
-            resultMatrixRowIndices[resultColOffsetCur] = rightRow;
-            rightColOffsetCur++;
-            resultColOffsetCur++;
-        } else {
-            leftColOffsetCur++;
-            rightColOffsetCur++;
-        }
-    }
-    
-    resultMatrixColLengths[rightCol] = resultColOffsetCur - resultMatrixColOffsets[rightCol];
-}
 
 @implementation PhComputation
 {
@@ -351,10 +293,7 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
         @autoreleasepool {
             it++;
             NSLog(@"Iteration start: %u", it);
-            
-//            [self MakeClearing];
-            
-            
+
             [self computeLeftColsAndLeftRightPairsOnGPU];
             
             if( *_leftRightPairsCountPtr == 0) {
@@ -464,10 +403,7 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     [self copyLeftColumnsOnGpu];
     [self executeLeftRightAdditionsOnGpu];
 
-    // swap
-    SparseMatrix *tmp = _matrix;
-    _matrix = _matrixToSumCols;
-    _matrixToSumCols = tmp;
+    swapMatrixPtrs(&_matrix, &_matrixToSumCols);
 }
     
 - (void) copyLeftColumnsOnGpu {
@@ -490,7 +426,6 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     MTLSize gridSize = MTLSizeMake(*_leftColsCountPtr, 1, 1);
 
     
-    // TODO: проверить threadsInThreadgroup везде
     NSUInteger threadsInThreadgroup = MIN(_mCopyLeftColumnsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
 
@@ -510,14 +445,6 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
 - (void) executeLeftRightAdditionsOnGpu {
     NSLog(@"Start method ExecuteLeftRightAdditionsOnGpu");
     NSDate *start = [NSDate date];
-
-//    for(uint i = 0; i < *_leftRightPairsCountPtr; i++){
-//        executeLeftRightAdditions2(_matrix.colOffsetsPtr, _matrix.colLengthsPtr, _matrix.rowIndicesPtr,
-//                      _matrixToSumCols.colOffsetsPtr, _matrixToSumCols.colLengthsPtr, _matrixToSumCols.rowIndicesPtr,
-//                                   _leftRightPairsPtr, i);
-//    }
-//
-//    return;
     
     id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
     assert(commandBuffer != nil);
@@ -543,8 +470,6 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     
     MTLSize gridSize = MTLSizeMake(*_leftRightPairsCountPtr, 1, 1);
 
-    
-    // TODO: проверить threadsInThreadgroup везде
     NSUInteger threadsInThreadgroup = MIN(_mExecuteLeftRightAdditionsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
     
@@ -575,11 +500,6 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     *_leftColsCountPtr = 0;
     *_leftRightPairsCountPtr = 0;
     
-//    for(index_t i = 0; i <*_nonZeroColsCountPtr;i++) {
-//        computeLeftColsAndLeftRightPairs2(_lowPtr, _leftColByLowPtr, _leftColsPtr, _leftColsCountPtr, _leftRightPairsPtr, _leftRightPairsCountPtr, _nonZeroColsPtr, i);
-//    }
-//
-    
     id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
     assert(commandBuffer != nil);
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
@@ -596,7 +516,7 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
 
     MTLSize gridSize = MTLSizeMake(*_nonZeroColsCountPtr, 1, 1);
 
-    NSUInteger threadsInThreadgroup = MIN(_mComputeLeftColsAndLeftRightPairsPSO.maxTotalThreadsPerThreadgroup, _matrix.n);
+    NSUInteger threadsInThreadgroup = MIN(_mComputeLeftColsAndLeftRightPairsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
 
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
@@ -631,7 +551,7 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     [computeEncoder setBuffer:_leftRightPairs offset:0 atIndex:2];
 
     MTLSize gridSize = MTLSizeMake(*_leftRightPairsCountPtr, 1, 1);
-    NSUInteger threadsInThreadgroup = MIN(_mComputeMatrixColLengthsPSO.maxTotalThreadsPerThreadgroup, _matrix.n);
+    NSUInteger threadsInThreadgroup = MIN(_mComputeMatrixColLengthsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
 
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
@@ -653,11 +573,6 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
     assert(computeEncoder != nil);
 
-
-//    [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
-//    [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
-//    [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
-
     [computeEncoder setComputePipelineState:_mComputeLowAndLeftColByLowPSO];
     [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
     [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
@@ -666,11 +581,9 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     [computeEncoder setBuffer:_leftColByLow offset:0 atIndex:4];
     [computeEncoder setBuffer:_leftRightPairs offset:0 atIndex:5];
 
-
     MTLSize gridSize = MTLSizeMake(*_leftRightPairsCountPtr, 1, 1);
 
-
-    NSUInteger threadsInThreadgroup = MIN(_mComputeLowAndLeftColByLowPSO.maxTotalThreadsPerThreadgroup, _matrix.n);
+    NSUInteger threadsInThreadgroup = MIN(_mComputeLowAndLeftColByLowPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
 
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
@@ -702,13 +615,11 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     MTLSize gridSize = MTLSizeMake(*_nonZeroColsCountPtr, 1, 1);
     (*_nonZeroColsCountPtr) = 0;
 
-
-    NSUInteger threadsInThreadgroup = MIN(_mComputeNonZeroColsPSO.maxTotalThreadsPerThreadgroup, _matrix.n);
+    NSUInteger threadsInThreadgroup = MIN(_mComputeNonZeroColsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
 
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
 
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
