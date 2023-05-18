@@ -5,28 +5,43 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        NSString * path = @"/Users/alex/Desktop/Education/4-cource/diploma/MetalTopologyBenchmark/datasets/vr_boundary_matrices/human_gene_2_35.0_metal.txt";
-
-        id<MTLDevice> device = MTLCopyAllDevices()[1];
-        NSLog([device name]);
-
-        SparseMatrix *matrix = [[SparseMatrix alloc] initWithDevice:device FromFile:path];
+        NSString *inputFile, *outputFile;
+        long gpuId = 0;
         
-        NSDate *start = [NSDate date];
         
-        SparseMatrixReduction* reduction = [[SparseMatrixReduction alloc] initWithDevice: device Matrix:matrix];
-        SparseMatrix *reducedMatrix = [reduction makeReduction];
+        if(argc < 3) {
+            NSLog(@"Not enough arguments: argument 1 - path to input file, argument 2- path to output file, argument 3(optional) - GPU id (default 0)");
+        }
+        inputFile = [NSString stringWithUTF8String:argv[1]];
+        outputFile = [NSString stringWithUTF8String:argv[2]];
         
-        NSDate *finish = [NSDate date];
-        NSTimeInterval executionTime = [finish timeIntervalSinceDate:start];
-        NSLog(@"Matrix reduction execution time = %f ms", 1000 * executionTime);
-        
-        uint32_t nonNulCols = 0;
-        for(uint32_t col = 0; col < reducedMatrix.n;col++) {
-            nonNulCols += (reducedMatrix.colLengthsPtr[col] > 0);
+        if(argc >=4) {
+            gpuId = atol(argv[3]);
         }
         
-        NSLog(@"NonNullCols = %lu", nonNulCols);
+        NSLog(@"inputFile=%@", inputFile);
+        NSLog(@"outputFile=%@", outputFile);
+        NSLog(@"gpuId=%lu", gpuId);
+        
+        id<MTLDevice> device = MTLCopyAllDevices()[gpuId];
+        NSLog(@"Using GPU with name: %@", [device name]);
+
+        NSLog(@"Reading input matrix...");
+        SparseMatrix *matrix = [[SparseMatrix alloc] initWithDevice:device FromFile:inputFile];
+        if(matrix == nil) {
+            NSLog(@"Error reading matrix");
+            return -1;
+        }
+    
+        NSLog(@"Computing PH..");
+        NSDate *start = [NSDate date];
+        SparseMatrixReduction* reduction = [[SparseMatrixReduction alloc] initWithDevice: device Matrix:matrix];
+        [reduction makeReduction];
+        NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
+        
+        NSLog(@"Computing PH done");
+        
+        NSLog(@"Matrix reduction execution time = %f ms", 1000 * executionTime);
         
         NSLog(@"computeLeftColsAndLeftRightPairsGpuTime = %f s", reduction.computeLeftColsAndLeftRightPairsGpuTime);
         NSLog(@"computeMatrixColLengthsGpuTime = %f s", reduction.computeMatrixColLengthsGpuTime);
@@ -46,6 +61,15 @@ int main(int argc, const char * argv[]) {
         NSLog(@"computeLowAndLeftColByLowGPUTime = %f %%", reduction.computeLowAndLeftColByLowGPUTime / reduction.computationTimeTotal * 100.0);
         NSLog(@"computeNonZeroColsGPUTime = %f %%", reduction.computeNonZeroColsGPUTime / reduction.computationTimeTotal * 100.0);
         NSLog(@"computationTimeTotal = %f %%", reduction.computationTimeTotal / reduction.computationTimeTotal * 100.0);
+        
+        
+        
+        NSLog(@"Getting persistence pairs...");
+        PersistencePairs *pairs = [reduction getPersistentPairs];
+        NSLog(@"Persistence pairs count = %lu", pairs.pairs.count);
+        
+        NSLog(@"Writing persistence pairs to file...");
+        [pairs writeToFile: outputFile];
     }
     return 0;
 }
