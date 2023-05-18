@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
-#import "SparseMatrixReduction.h"
+#import "PhComputation.h"
 
 
 int main(int argc, const char * argv[]) {
@@ -35,37 +35,37 @@ int main(int argc, const char * argv[]) {
     
         NSLog(@"Computing PH..");
         NSDate *start = [NSDate date];
-        SparseMatrixReduction* reduction = [[SparseMatrixReduction alloc] initWithDevice: device Matrix:matrix];
-        [reduction makeReduction];
+        PhComputation* computation = [[PhComputation alloc] initWithDevice: device Matrix:matrix];
+        [computation makeReduction];
         NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
         
         NSLog(@"Computing PH done");
         
         NSLog(@"Matrix reduction execution time = %f ms", 1000 * executionTime);
         
-        NSLog(@"computeLeftColsAndLeftRightPairsGpuTime = %f s", reduction.computeLeftColsAndLeftRightPairsGpuTime);
-        NSLog(@"computeMatrixColLengthsGpuTime = %f s", reduction.computeMatrixColLengthsGpuTime);
-        NSLog(@"computeMatrixColOffsetsTime = %f s", reduction.computeMatrixColOffsetsTime);
-        NSLog(@"executeCopyLeftColumnsOnGpuTime = %f s", reduction.executeCopyLeftColumnsOnGpuTime);
-        NSLog(@"executeLeftRightAdditionsGpuTime = %f s", reduction.executeLeftRightAdditionsGpuTime);
-        NSLog(@"computeLowAndLeftColByLowGPUTime = %f s", reduction.computeLowAndLeftColByLowGPUTime);
-        NSLog(@"computeNonZeroColsGPUTime = %f s", reduction.computeNonZeroColsGPUTime);
-        NSLog(@"computationTimeTotal = %f s", reduction.computationTimeTotal);
+        NSLog(@"computeLeftColsAndLeftRightPairsGpuTime = %f s", computation.computeLeftColsAndLeftRightPairsGpuTime);
+        NSLog(@"computeMatrixColLengthsGpuTime = %f s", computation.computeMatrixColLengthsGpuTime);
+        NSLog(@"computeMatrixColOffsetsTime = %f s", computation.computeMatrixColOffsetsTime);
+        NSLog(@"executeCopyLeftColumnsOnGpuTime = %f s", computation.executeCopyLeftColumnsOnGpuTime);
+        NSLog(@"executeLeftRightAdditionsGpuTime = %f s", computation.executeLeftRightAdditionsGpuTime);
+        NSLog(@"computeLowAndLeftColByLowGPUTime = %f s", computation.computeLowAndLeftColByLowGPUTime);
+        NSLog(@"computeNonZeroColsGPUTime = %f s", computation.computeNonZeroColsGPUTime);
+        NSLog(@"computationTimeTotal = %f s", computation.computationTimeTotal);
         
         
-        NSLog(@"computeLeftColsAndLeftRightPairsGpuTime = %f %%", reduction.computeLeftColsAndLeftRightPairsGpuTime / reduction.computationTimeTotal * 100.0);
-        NSLog(@"computeMatrixColLengthsGpuTime = %f %%", reduction.computeMatrixColLengthsGpuTime / reduction.computationTimeTotal * 100.0);
-        NSLog(@"computeMatrixColOffsetsTime = %f %%", reduction.computeMatrixColOffsetsTime / reduction.computationTimeTotal * 100.0);
-        NSLog(@"executeCopyLeftColumnsOnGpuTime = %f %%", reduction.executeCopyLeftColumnsOnGpuTime / reduction.computationTimeTotal * 100.0);
-        NSLog(@"executeLeftRightAdditionsGpuTime = %f %%", reduction.executeLeftRightAdditionsGpuTime / reduction.computationTimeTotal * 100.0);
-        NSLog(@"computeLowAndLeftColByLowGPUTime = %f %%", reduction.computeLowAndLeftColByLowGPUTime / reduction.computationTimeTotal * 100.0);
-        NSLog(@"computeNonZeroColsGPUTime = %f %%", reduction.computeNonZeroColsGPUTime / reduction.computationTimeTotal * 100.0);
-        NSLog(@"computationTimeTotal = %f %%", reduction.computationTimeTotal / reduction.computationTimeTotal * 100.0);
+        NSLog(@"computeLeftColsAndLeftRightPairsGpuTime = %f %%", computation.computeLeftColsAndLeftRightPairsGpuTime / computation.computationTimeTotal * 100.0);
+        NSLog(@"computeMatrixColLengthsGpuTime = %f %%", computation.computeMatrixColLengthsGpuTime / computation.computationTimeTotal * 100.0);
+        NSLog(@"computeMatrixColOffsetsTime = %f %%", computation.computeMatrixColOffsetsTime / computation.computationTimeTotal * 100.0);
+        NSLog(@"executeCopyLeftColumnsOnGpuTime = %f %%", computation.executeCopyLeftColumnsOnGpuTime / computation.computationTimeTotal * 100.0);
+        NSLog(@"executeLeftRightAdditionsGpuTime = %f %%", computation.executeLeftRightAdditionsGpuTime / computation.computationTimeTotal * 100.0);
+        NSLog(@"computeLowAndLeftColByLowGPUTime = %f %%", computation.computeLowAndLeftColByLowGPUTime / computation.computationTimeTotal * 100.0);
+        NSLog(@"computeNonZeroColsGPUTime = %f %%", computation.computeNonZeroColsGPUTime / computation.computationTimeTotal * 100.0);
+        NSLog(@"computationTimeTotal = %f %%", computation.computationTimeTotal / computation.computationTimeTotal * 100.0);
         
         
         
         NSLog(@"Getting persistence pairs...");
-        PersistencePairs *pairs = [reduction getPersistentPairs];
+        PersistencePairs *pairs = [computation getPersistentPairs];
         NSLog(@"Persistence pairs count = %lu", pairs.pairs.count);
         
         NSLog(@"Writing persistence pairs to file...");

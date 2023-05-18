@@ -6,7 +6,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface SparseMatrixReduction : NSObject
+@interface PhComputation : NSObject
 // metrics
 @property(readonly) double computationTimeTotal;
 @property(readonly) double computeLeftColsAndLeftRightPairsGpuTime;

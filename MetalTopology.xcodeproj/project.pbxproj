@@ -14,12 +14,12 @@
 		FA22D04F29EC31B800B6F933 /* MetalTopology.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA22CFF329EC1C9000B6F933 /* MetalTopology.framework */; };
 		FA22D06029FD312200B6F933 /* SparseMatrix.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D05F29FD312200B6F933 /* SparseMatrix.m */; };
 		FA22D06F29FFF01A00B6F933 /* SparseMatrixTest.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D06E29FFF01A00B6F933 /* SparseMatrixTest.m */; };
-		FA22D07B2A029FC600B6F933 /* SparseMatrixReduction.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D07A2A029FC600B6F933 /* SparseMatrixReduction.m */; };
-		FA22D0812A02A10700B6F933 /* SparseMatrixReduction.metal in Sources */ = {isa = PBXBuildFile; fileRef = FA22D0802A02A10700B6F933 /* SparseMatrixReduction.metal */; };
+		FA22D07B2A029FC600B6F933 /* PhComputation.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D07A2A029FC600B6F933 /* PhComputation.m */; };
+		FA22D0812A02A10700B6F933 /* PhComputation.metal in Sources */ = {isa = PBXBuildFile; fileRef = FA22D0802A02A10700B6F933 /* PhComputation.metal */; };
 		FA22D08B2A0440BC00B6F933 /* SparseMatrixReductionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = FA22D08A2A0440BC00B6F933 /* SparseMatrixReductionTest.m */; };
 		FAA1B9EC2A05685C00754167 /* matrix_2.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAA1B9EB2A05685C00754167 /* matrix_2.txt */; };
 		FAA1B9F12A05687000754167 /* matrix_2_reduced.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAA1B9F02A05687000754167 /* matrix_2_reduced.txt */; };
-		FAA1B9F52A070C1E00754167 /* SparseMatrixReduction.h in Headers */ = {isa = PBXBuildFile; fileRef = FA22D07F2A029FDA00B6F933 /* SparseMatrixReduction.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		FAA1B9F52A070C1E00754167 /* PhComputation.h in Headers */ = {isa = PBXBuildFile; fileRef = FA22D07F2A029FDA00B6F933 /* PhComputation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FAE846D52A09AAE7006390BA /* matrix_3.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE846D42A09AAE7006390BA /* matrix_3.txt */; };
 		FAE846DA2A09AAFA006390BA /* matrix_3_pairs.txt in Resources */ = {isa = PBXBuildFile; fileRef = FAE846D92A09AAFA006390BA /* matrix_3_pairs.txt */; };
 		FAE846DF2A09AEA8006390BA /* PersistencePairs.h in Headers */ = {isa = PBXBuildFile; fileRef = FAE846DE2A09AEA8006390BA /* PersistencePairs.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -67,9 +67,9 @@
 		FA22D05F29FD312200B6F933 /* SparseMatrix.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrix.m; sourceTree = "<group>"; };
 		FA22D06429FD313100B6F933 /* SparseMatrix.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SparseMatrix.h; sourceTree = "<group>"; };
 		FA22D06E29FFF01A00B6F933 /* SparseMatrixTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrixTest.m; sourceTree = "<group>"; };
-		FA22D07A2A029FC600B6F933 /* SparseMatrixReduction.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrixReduction.m; sourceTree = "<group>"; };
-		FA22D07F2A029FDA00B6F933 /* SparseMatrixReduction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SparseMatrixReduction.h; sourceTree = "<group>"; };
-		FA22D0802A02A10700B6F933 /* SparseMatrixReduction.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = SparseMatrixReduction.metal; sourceTree = "<group>"; };
+		FA22D07A2A029FC600B6F933 /* PhComputation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PhComputation.m; sourceTree = "<group>"; };
+		FA22D07F2A029FDA00B6F933 /* PhComputation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PhComputation.h; sourceTree = "<group>"; };
+		FA22D0802A02A10700B6F933 /* PhComputation.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = PhComputation.metal; sourceTree = "<group>"; };
 		FA22D08A2A0440BC00B6F933 /* SparseMatrixReductionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrixReductionTest.m; sourceTree = "<group>"; };
 		FAA1B9EB2A05685C00754167 /* matrix_2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_2.txt; sourceTree = "<group>"; };
 		FAA1B9F02A05687000754167 /* matrix_2_reduced.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_2_reduced.txt; sourceTree = "<group>"; };
@@ -142,9 +142,9 @@
 				FA22CFF729EC1C9000B6F933 /* Info.plist */,
 				FA22D05F29FD312200B6F933 /* SparseMatrix.m */,
 				FA22D06429FD313100B6F933 /* SparseMatrix.h */,
-				FA22D07A2A029FC600B6F933 /* SparseMatrixReduction.m */,
-				FA22D07F2A029FDA00B6F933 /* SparseMatrixReduction.h */,
-				FA22D0802A02A10700B6F933 /* SparseMatrixReduction.metal */,
+				FA22D07A2A029FC600B6F933 /* PhComputation.m */,
+				FA22D07F2A029FDA00B6F933 /* PhComputation.h */,
+				FA22D0802A02A10700B6F933 /* PhComputation.metal */,
 				FAE846DE2A09AEA8006390BA /* PersistencePairs.h */,
 				FAE846E32A09AEBC006390BA /* PersistencePairs.m */,
 				FAE846F82A0A7190006390BA /* Types.h */,
@@ -212,7 +212,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FAE846F92A0A7190006390BA /* Types.h in Headers */,
-				FAA1B9F52A070C1E00754167 /* SparseMatrixReduction.h in Headers */,
+				FAA1B9F52A070C1E00754167 /* PhComputation.h in Headers */,
 				FAE846DF2A09AEA8006390BA /* PersistencePairs.h in Headers */,
 				FA22D00429EC1C9000B6F933 /* MetalTopology.h in Headers */,
 			);
@@ -347,8 +347,8 @@
 			files = (
 				FAE846F42A09B9D5006390BA /* PersistencePairs.m in Sources */,
 				FA22D06029FD312200B6F933 /* SparseMatrix.m in Sources */,
-				FA22D0812A02A10700B6F933 /* SparseMatrixReduction.metal in Sources */,
-				FA22D07B2A029FC600B6F933 /* SparseMatrixReduction.m in Sources */,
+				FA22D0812A02A10700B6F933 /* PhComputation.metal in Sources */,
+				FA22D07B2A029FC600B6F933 /* PhComputation.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

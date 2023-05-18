@@ -1,4 +1,4 @@
-#import "SparseMatrixReduction.h"
+#import "PhComputation.h"
 
 #import <stdint.h>
 #import "Types.h"
@@ -74,7 +74,7 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     resultMatrixColLengths[rightCol] = resultColOffsetCur - resultMatrixColOffsets[rightCol];
 }
 
-@implementation SparseMatrixReduction
+@implementation PhComputation
 {
     // metal variables
     id<MTLDevice> _mDevice;
