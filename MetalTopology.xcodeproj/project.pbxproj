@@ -73,6 +73,7 @@
 		FA22D08A2A0440BC00B6F933 /* SparseMatrixReductionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SparseMatrixReductionTest.m; sourceTree = "<group>"; };
 		FAA1B9EB2A05685C00754167 /* matrix_2.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_2.txt; sourceTree = "<group>"; };
 		FAA1B9F02A05687000754167 /* matrix_2_reduced.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_2_reduced.txt; sourceTree = "<group>"; };
+		FAA5BFEC2A16AE6100079843 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		FAE846D42A09AAE7006390BA /* matrix_3.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_3.txt; sourceTree = "<group>"; };
 		FAE846D92A09AAFA006390BA /* matrix_3_pairs.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = matrix_3_pairs.txt; sourceTree = "<group>"; };
 		FAE846DE2A09AEA8006390BA /* PersistencePairs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PersistencePairs.h; sourceTree = "<group>"; };
@@ -117,6 +118,7 @@
 		FA22CFE929EC1C9000B6F933 = {
 			isa = PBXGroup;
 			children = (
+				FAA5BFEC2A16AE6100079843 /* README.md */,
 				FA22D04029EC311200B6F933 /* cmd */,
 				FA22CFF529EC1C9000B6F933 /* MetalTopology */,
 				FA22D00029EC1C9000B6F933 /* MetalTopologyTests */,
