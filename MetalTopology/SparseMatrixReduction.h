@@ -11,7 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) double computationTimeTotal;
 @property(readonly) double computeLeftColsAndLeftRightPairsGpuTime;
 @property(readonly) double computeMatrixColLengthsGpuTime;
-@property(readonly) double computeMatrixColOffsetsGpuTime;
+@property(readonly) double computeMatrixColOffsetsTime;
 @property(readonly) double executeLeftRightAdditionsGpuTime;
 @property(readonly) double computeLowAndLeftColByLowGPUTime;
 @property(readonly) double computeNonZeroColsGPUTime;

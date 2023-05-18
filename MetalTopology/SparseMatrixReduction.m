@@ -394,7 +394,7 @@ void executeLeftRightAdditions2(const index_t *matrixColOffsets,
     
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"computeMatrixColOffsets execution time = %f", 1000 * executionTime);
-    _computeMatrixColOffsetsGpuTime += executionTime;
+    _computeMatrixColOffsetsTime += executionTime;
 }
 
 - (void) computeMatrixOffsetsBlockSumsOnGpu {
