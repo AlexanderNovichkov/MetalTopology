@@ -3,7 +3,6 @@
 #import <Metal/Metal.h>
 
 #import "SparseMatrixReduction.h"
-#import "utils.h"
 
 @interface SparseMatrixReductionTest : XCTestCase
 
