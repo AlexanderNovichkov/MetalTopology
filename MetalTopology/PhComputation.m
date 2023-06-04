@@ -5,15 +5,15 @@
 
 void swapIndexPtrs ( index_t** ptrA, index_t** ptrB ) {
     index_t *temp = *ptrA;
-     *ptrA = *ptrB;
-     *ptrB = temp;
- }
+    *ptrA = *ptrB;
+    *ptrB = temp;
+}
 
 void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptrB ) {
     SparseMatrix *temp = *ptrA;
-     *ptrA = *ptrB;
-     *ptrB = temp;
- }
+    *ptrA = *ptrB;
+    *ptrB = temp;
+}
 
 
 @implementation PhComputation
@@ -44,7 +44,7 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     id<MTLBuffer> _nonZeroCols;
     index_t* _nonZeroColsPtr;
     
-
+    
     
     id<MTLBuffer> _leftColsCount;
     index_t *_leftColsCountPtr;
@@ -75,11 +75,11 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     self = [super init];
     if (self)
     {
-
+        
         _mDevice = device;
         
         NSError* error = nil;
-
+        
         id<MTLLibrary> defaultLibrary = [_mDevice newDefaultLibraryWithBundle:[NSBundle bundleForClass: [self class]] error:nil];
         if (defaultLibrary == nil)
         {
@@ -191,7 +191,7 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
             NSLog(@"Failed to created pipeline state object, error %@.", error);
             return nil;
         }
-
+        
         
         _mCommandQueue = [_mDevice newCommandQueue];
         if (_mCommandQueue == nil)
@@ -293,7 +293,7 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
         @autoreleasepool {
             it++;
             NSLog(@"Iteration start: %u", it);
-
+            
             [self computeLeftColsAndLeftRightPairsOnGPU];
             
             if( *_leftRightPairsCountPtr == 0) {
@@ -324,11 +324,11 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     NSDate *start = [NSDate date];
     
     [self computeMatrixOffsetsBlockSumsOnGpu];
-
+    
     for(index_t blockId = 1; blockId < _matrixOffsetsBlocksCount; blockId ++){
         _matrixOffsetsBlockSumsPtr[blockId] += _matrixOffsetsBlockSumsPtr[blockId - 1];
     }
-
+    
     [self computeMatrixOffsetsOnGpu];
     
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
@@ -341,25 +341,25 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     NSDate *start = [NSDate date];
     id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
     assert(commandBuffer != nil);
-
+    
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
     assert(computeEncoder != nil);
     [computeEncoder setComputePipelineState:_mComputeMatrixOffsetsBlockSumsPSO];
     [computeEncoder setBuffer:_matrixToSumCols.colLengths offset:0 atIndex:0];
     [computeEncoder setBuffer:_matrixOffsetsBlockSums offset:0 atIndex:1];
     [computeEncoder setBuffer:_matrixSize offset:0 atIndex:2];
-
-
+    
+    
     MTLSize gridSize = MTLSizeMake(_matrixOffsetsBlocksCount, 1, 1);
     NSUInteger threadsInThreadgroup = MIN(_mComputeMatrixOffsetsBlockSumsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
-
+    
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
+    
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
-
+    
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"computeMatrixOffsetsBlockSumsOnGpu execution time = %f", 1000 * executionTime);
 }
@@ -369,7 +369,7 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     NSDate *start = [NSDate date];
     id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
     assert(commandBuffer != nil);
-
+    
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
     assert(computeEncoder != nil);
     [computeEncoder setComputePipelineState:_mComputeMatrixOffsetsPSO];
@@ -377,17 +377,17 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     [computeEncoder setBuffer:_matrixOffsetsBlockSums offset:0 atIndex:1];
     [computeEncoder setBuffer:_matrixSize offset:0 atIndex:2];
     [computeEncoder setBuffer:_matrixToSumCols.colOffsets offset:0 atIndex:3];
-
+    
     MTLSize gridSize = MTLSizeMake(_matrixOffsetsBlocksCount, 1, 1);
     NSUInteger threadsInThreadgroup = MIN(_mComputeMatrixOffsetsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
-
+    
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
+    
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
-
+    
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"computeMatrixOffsetsOnGpu execution time = %f", 1000 * executionTime);
 }
@@ -399,13 +399,13 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
         _matrixToSumCols.rowIndices = [_mDevice newBufferWithLength:minBufSize*2 options:MTLResourceStorageModeShared];
         NSLog(@"MAKE ALLOCATION %lu", minBufSize*2);
     }
-
+    
     [self copyLeftColumnsOnGpu];
     [self executeLeftRightAdditionsOnGpu];
-
+    
     swapMatrixPtrs(&_matrix, &_matrixToSumCols);
 }
-    
+
 - (void) copyLeftColumnsOnGpu {
     NSLog(@"Start method copyLeftColumnsOnGpu");
     NSDate *start = [NSDate date];
@@ -414,7 +414,7 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     assert(commandBuffer != nil);
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
     assert(computeEncoder != nil);
-
+    
     [computeEncoder setComputePipelineState:_mCopyLeftColumnsPSO];
     [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
     [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
@@ -424,17 +424,17 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     [computeEncoder setBuffer:_leftCols offset:0 atIndex:5];
     
     MTLSize gridSize = MTLSizeMake(*_leftColsCountPtr, 1, 1);
-
+    
     
     NSUInteger threadsInThreadgroup = MIN(_mCopyLeftColumnsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
-
+    
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
+    
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
-
+    
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"executeCopyLeftColumnsOnGpuTime execution time = %f", 1000 * executionTime);
     _executeCopyLeftColumnsOnGpuTime  += executionTime;
@@ -450,15 +450,15 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     assert(commandBuffer != nil);
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
     assert(computeEncoder != nil);
-
-
-//    [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
-//    [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
-//    [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
-//    [_matrixToSumCols.colOffsets didModifyRange:NSMakeRange(0, _matrixToSumCols.colOffsets.length)];
-//    [_matrixToSumCols.colLengths didModifyRange:NSMakeRange(0, _matrixToSumCols.colLengths.length)];
-//    [_matrixToSumCols.rowIndices didModifyRange:NSMakeRange(0, _matrixToSumCols.rowIndices.length)];
-
+    
+    
+    //    [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
+    //    [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
+    //    [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
+    //    [_matrixToSumCols.colOffsets didModifyRange:NSMakeRange(0, _matrixToSumCols.colOffsets.length)];
+    //    [_matrixToSumCols.colLengths didModifyRange:NSMakeRange(0, _matrixToSumCols.colLengths.length)];
+    //    [_matrixToSumCols.rowIndices didModifyRange:NSMakeRange(0, _matrixToSumCols.rowIndices.length)];
+    
     [computeEncoder setComputePipelineState:_mExecuteLeftRightAdditionsPSO];
     [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
     [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
@@ -469,25 +469,25 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     [computeEncoder setBuffer:_leftRightPairs offset:0 atIndex:6];
     
     MTLSize gridSize = MTLSizeMake(*_leftRightPairsCountPtr, 1, 1);
-
+    
     NSUInteger threadsInThreadgroup = MIN(_mExecuteLeftRightAdditionsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
     
-
+    
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
-//    // Synchronize the managed buffer.
-//    id <MTLBlitCommandEncoder> blitCommandEncoder = [commandBuffer blitCommandEncoder];
-//    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colOffsets];
-//    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colLengths];
-//    [blitCommandEncoder synchronizeResource:_matrixToSumCols.rowIndices];
-//    [blitCommandEncoder endEncoding];
-
-
+    
+    //    // Synchronize the managed buffer.
+    //    id <MTLBlitCommandEncoder> blitCommandEncoder = [commandBuffer blitCommandEncoder];
+    //    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colOffsets];
+    //    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colLengths];
+    //    [blitCommandEncoder synchronizeResource:_matrixToSumCols.rowIndices];
+    //    [blitCommandEncoder endEncoding];
+    
+    
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
-
+    
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"ExecuteLeftRightAdditions execution time = %f", 1000 * executionTime);
     _executeLeftRightAdditionsGpuTime += executionTime;
@@ -513,20 +513,20 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     [computeEncoder setBuffer:_leftRightPairs offset:0 atIndex: 4];
     [computeEncoder setBuffer:_leftRightPairsCount offset:0 atIndex:5];
     [computeEncoder setBuffer:_nonZeroCols offset:0 atIndex:6];
-
+    
     MTLSize gridSize = MTLSizeMake(*_nonZeroColsCountPtr, 1, 1);
-
+    
     NSUInteger threadsInThreadgroup = MIN(_mComputeLeftColsAndLeftRightPairsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
-
+    
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
+    
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
     
     NSLog(@"leftColsCount=%u, leftRightPairsCount=%u", *_leftColsCountPtr, *_leftRightPairsCountPtr);
-
+    
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"computeLeftAndRightColsGpuTime execution time = %f", 1000 * executionTime);
     _computeLeftColsAndLeftRightPairsGpuTime += executionTime;
@@ -549,17 +549,17 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:0];
     [computeEncoder setBuffer:_matrixToSumCols.colLengths offset:0 atIndex:1];
     [computeEncoder setBuffer:_leftRightPairs offset:0 atIndex:2];
-
+    
     MTLSize gridSize = MTLSizeMake(*_leftRightPairsCountPtr, 1, 1);
     NSUInteger threadsInThreadgroup = MIN(_mComputeMatrixColLengthsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
-
+    
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
+    
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
-
+    
     NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
     NSLog(@"computeMatrixColLengthsGpuTime execution time = %f", 1000 * executionTime);
     _computeMatrixColLengthsGpuTime += executionTime;
@@ -572,7 +572,7 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     assert(commandBuffer != nil);
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
     assert(computeEncoder != nil);
-
+    
     [computeEncoder setComputePipelineState:_mComputeLowAndLeftColByLowPSO];
     [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
     [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
@@ -580,18 +580,18 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     [computeEncoder setBuffer:_low offset:0 atIndex:3];
     [computeEncoder setBuffer:_leftColByLow offset:0 atIndex:4];
     [computeEncoder setBuffer:_leftRightPairs offset:0 atIndex:5];
-
+    
     MTLSize gridSize = MTLSizeMake(*_leftRightPairsCountPtr, 1, 1);
-
+    
     NSUInteger threadsInThreadgroup = MIN(_mComputeLowAndLeftColByLowPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
-
+    
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
+    
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
-
+    
     NSDate *methodFinish = [NSDate date];
     NSTimeInterval executionTime = [methodFinish timeIntervalSinceDate:methodStart];
     NSLog(@"ComputeLowOnGpu execution time = %f", 1000 * executionTime);
@@ -605,25 +605,25 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
     assert(commandBuffer != nil);
     id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
     assert(computeEncoder != nil);
-
+    
     [computeEncoder setComputePipelineState:_mComputeNonZeroColsPSO];
     [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:0];
     [computeEncoder setBuffer:_nonZeroCols offset:0 atIndex:1];
     [computeEncoder setBuffer:_nonZeroColsResult offset:0 atIndex:2];
     [computeEncoder setBuffer:_nonZeroColsCount offset:0 atIndex:3];
-
+    
     MTLSize gridSize = MTLSizeMake(*_nonZeroColsCountPtr, 1, 1);
     (*_nonZeroColsCountPtr) = 0;
-
+    
     NSUInteger threadsInThreadgroup = MIN(_mComputeNonZeroColsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
     MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
-
+    
     [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
     [computeEncoder endEncoding];
-
+    
     [commandBuffer commit];
     [commandBuffer waitUntilCompleted];
-
+    
     swapIndexPtrs(&_nonZeroColsPtr, &_nonZeroColsResultPtr);
     
     id<MTLBuffer> temp = _nonZeroCols;

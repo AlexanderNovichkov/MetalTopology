@@ -7,9 +7,9 @@
 using namespace metal;
 
 kernel void computeMatrixOffsetsBlockSums(device const index_t *resultMatrixColLengths,
-                                    device index_t *matrixOffsetsBlockSums,
-                                    device const index_t *matrixSize,
-                                    uint blockId [[thread_position_in_grid]])
+                                          device index_t *matrixOffsetsBlockSums,
+                                          device const index_t *matrixSize,
+                                          uint blockId [[thread_position_in_grid]])
 {
     index_t colBegin = blockId * OFFSETS_BLOCK_SIZE;
     index_t colEnd =  min(colBegin + OFFSETS_BLOCK_SIZE, *matrixSize);
@@ -21,10 +21,10 @@ kernel void computeMatrixOffsetsBlockSums(device const index_t *resultMatrixColL
 }
 
 kernel void computeMatrixOffsets(device const index_t *resultMatrixColLengths,
-                                device const index_t *matrixOffsetsBlockPrefixSums,
-                                device const index_t * matrixSize,
-                                device index_t *resultMatrixColOffsets,
-                                uint blockId [[thread_position_in_grid]])
+                                 device const index_t *matrixOffsetsBlockPrefixSums,
+                                 device const index_t * matrixSize,
+                                 device index_t *resultMatrixColOffsets,
+                                 uint blockId [[thread_position_in_grid]])
 {
     index_t colBegin = blockId * OFFSETS_BLOCK_SIZE;
     index_t colEnd =  min(colBegin + OFFSETS_BLOCK_SIZE, *matrixSize);
@@ -36,13 +36,13 @@ kernel void computeMatrixOffsets(device const index_t *resultMatrixColLengths,
 }
 
 kernel void executeLeftRightAdditions(device const index_t *matrixColOffsets,
-                               device const index_t *matrixColLengths,
-                               device const index_t *matrixRowIndices,
-                               device const index_t *resultMatrixColOffsets,
-                               device index_t *resultMatrixColLengths,
-                               device index_t *resultMatrixRowIndices,
-                               device const LeftRightPair * leftRightPairs,
-                               uint pairIdx [[thread_position_in_grid]])
+                                      device const index_t *matrixColLengths,
+                                      device const index_t *matrixRowIndices,
+                                      device const index_t *resultMatrixColOffsets,
+                                      device index_t *resultMatrixColLengths,
+                                      device index_t *resultMatrixRowIndices,
+                                      device const LeftRightPair * leftRightPairs,
+                                      uint pairIdx [[thread_position_in_grid]])
 {
     const uint32_t rightCol = leftRightPairs[pairIdx].rightCol;
     const uint32_t leftCol = leftRightPairs[pairIdx].leftCol;
@@ -59,9 +59,9 @@ kernel void executeLeftRightAdditions(device const index_t *matrixColOffsets,
     for(uint32_t rightColOffset = matrixColOffsets[rightCol]; rightColOffset < rightColOffsetEnd; rightColOffset++) {
         uint32_t rightRow = matrixRowIndices[rightColOffset];
         while(leftColOffset < leftColOffsetEnd && matrixRowIndices[leftColOffset] < rightRow) {
-                resultMatrixRowIndices[resultColOffsetCur] = matrixRowIndices[leftColOffset];
-                leftColOffset++;
-                resultColOffsetCur++;
+            resultMatrixRowIndices[resultColOffsetCur] = matrixRowIndices[leftColOffset];
+            leftColOffset++;
+            resultColOffsetCur++;
         }
         if(matrixRowIndices[leftColOffset] == rightRow) {
             leftColOffset++;
@@ -70,17 +70,17 @@ kernel void executeLeftRightAdditions(device const index_t *matrixColOffsets,
             resultColOffsetCur++;
         }
     }
-
+    
     resultMatrixColLengths[rightCol] = resultColOffsetCur - resultMatrixColOffsets[rightCol];
 }
 
 kernel void copyLeftColumns(device const index_t *matrixColOffsets,
-                               device const index_t *matrixColLengths,
-                               device const index_t *matrixRowIndices,
-                               device const index_t *resultMatrixColOffsets,
-                               device index_t *resultMatrixRowIndices,
-                               device const index_t * leftCols,
-                               uint leftColsIdx [[thread_position_in_grid]])
+                            device const index_t *matrixColLengths,
+                            device const index_t *matrixRowIndices,
+                            device const index_t *resultMatrixColOffsets,
+                            device index_t *resultMatrixRowIndices,
+                            device const index_t * leftCols,
+                            uint leftColsIdx [[thread_position_in_grid]])
 {
     const index_t col = leftCols[leftColsIdx];
     
@@ -97,12 +97,12 @@ kernel void copyLeftColumns(device const index_t *matrixColOffsets,
 
 
 kernel void computeLowAndLeftColByLow(device const index_t *matrixColOffsets,
-                       device index_t *matrixColLengths,
-                       device const index_t *matrixRowIndices,
-                       device index_t *lows,
-                       device atomic_index_t *leftColByLow,
-                       device struct LeftRightPair* leftRightPairs,
-                       uint pairIdx [[thread_position_in_grid]])
+                                      device index_t *matrixColLengths,
+                                      device const index_t *matrixRowIndices,
+                                      device index_t *lows,
+                                      device atomic_index_t *leftColByLow,
+                                      device struct LeftRightPair* leftRightPairs,
+                                      uint pairIdx [[thread_position_in_grid]])
 {
     const index_t col = leftRightPairs[pairIdx].rightCol;
     const index_t length = matrixColLengths[col];
@@ -119,10 +119,10 @@ kernel void computeLowAndLeftColByLow(device const index_t *matrixColOffsets,
 
 
 kernel void computeNonZeroCols(device const index_t *matrixColLengths,
-                                      device const index_t *nonZeroCols,
-                                      device index_t *nonZeroColsResult,
-                                      device atomic_index_t * nonZeroColsCount,
-                                      uint idx [[thread_position_in_grid]])
+                               device const index_t *nonZeroCols,
+                               device index_t *nonZeroColsResult,
+                               device atomic_index_t * nonZeroColsCount,
+                               uint idx [[thread_position_in_grid]])
 {
     const index_t col = nonZeroCols[idx];
     if(matrixColLengths[col] != 0) {

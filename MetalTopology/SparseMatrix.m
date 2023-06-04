@@ -83,7 +83,7 @@
 - (NSString *)description {
     NSMutableString *description = [[NSMutableString alloc]init];
     [description appendFormat:@"%u %u\n", _n, [self getNumberOfNonZeros]];
-
+    
     for (int col = 0; col < _n;col++) {
         index_t offset = _colOffsetsPtr[col];
         index_t length = _colLengthsPtr[col];
@@ -113,3 +113,4 @@
 }
 
 @end
+

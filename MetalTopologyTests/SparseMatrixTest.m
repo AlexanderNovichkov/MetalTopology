@@ -18,7 +18,7 @@
     NSBundle *bundle = [NSBundle bundleForClass: [self class]];
     NSString * path = [[bundle URLForResource:@"matrix_1" withExtension:@"txt"] path];
     _matrix = [[SparseMatrix alloc] initWithDevice:_mDevice FromFile:path];
-
+    
 }
 
 - (void)tearDown {

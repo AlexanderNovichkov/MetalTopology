@@ -25,14 +25,14 @@ int main(int argc, const char * argv[]) {
         
         id<MTLDevice> device = MTLCopyAllDevices()[gpuId];
         NSLog(@"Using GPU with name: %@", [device name]);
-
+        
         NSLog(@"Reading input matrix...");
         SparseMatrix *matrix = [[SparseMatrix alloc] initWithDevice:device FromFile:inputFile];
         if(matrix == nil) {
             NSLog(@"Error reading matrix");
             return -1;
         }
-    
+        
         NSLog(@"Computing PH..");
         NSDate *start = [NSDate date];
         PhComputation* computation = [[PhComputation alloc] initWithDevice: device Matrix:matrix];
