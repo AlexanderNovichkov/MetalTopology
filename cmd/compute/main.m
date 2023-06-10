@@ -53,7 +53,7 @@ int main(int argc, const char *argv[]) {
     SparseMatrix *matrix;
     if ([inputType isEqualToString:@"matrix"]) {
       matrix = [SparseMatrix readWithDevice:device FromMatrixFile:inputFile];
-    } else if ([inputType isEqualToString:@"matrix"]) {
+    } else if ([inputType isEqualToString:@"simplicies"]) {
       matrix = [SparseMatrix readWithDevice:device FromSimpliciesFile:inputFile];
     } else {
       NSLog(@"Incorrect inputType=%@", inputType);
