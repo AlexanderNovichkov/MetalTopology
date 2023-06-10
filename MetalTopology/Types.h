@@ -6,6 +6,6 @@
 #define OFFSETS_BLOCK_SIZE 64
 
 struct LeftRightPair {
-    index_t leftCol;
-    index_t rightCol;
+  index_t leftCol;
+  index_t rightCol;
 };

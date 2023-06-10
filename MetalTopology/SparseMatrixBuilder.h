@@ -8,19 +8,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SparseMatrixBuilder : NSObject
 
-- (instancetype) initWithInitialColumnsCapacity: (index_t) columns InitialNonZeroElementsCapacity: (index_t) nonZeros;
+- (instancetype)initWithInitialColumnsCapacity:(index_t)columns
+                InitialNonZeroElementsCapacity:(index_t)nonZeros;
 
-- (void) addColumn;
+- (void)addColumn;
 
-- (void) addNonZeroRowForLastColumn: (index_t) row;
+- (void)addNonZeroRowForLastColumn:(index_t)row;
 
-- (index_t) getNonZeroElementsCount;
+- (index_t)getNonZeroElementsCount;
 
-- (index_t) getColumnsCount;
+- (index_t)getColumnsCount;
 
-- (SparseMatrix*) buildWithDevice: (id<MTLDevice>) device;
+- (SparseMatrix *)buildWithDevice:(id<MTLDevice>)device;
 
 @end
-
 
 NS_ASSUME_NONNULL_END

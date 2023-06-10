@@ -1,8 +1,8 @@
 #import <Foundation/Foundation.h>
 #import <Metal/Metal.h>
 
-#include "SparseMatrix.h"
 #include "PersistencePairs.h"
+#include "SparseMatrix.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -17,10 +17,9 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) double computeNonZeroColsGPUTime;
 @property(readonly) double executeCopyLeftColumnsOnGpuTime;
 
-
-- (instancetype) initWithDevice: (id<MTLDevice>) device Matrix: (SparseMatrix*) matrix;
-- (SparseMatrix*) makeReduction;
-- (PersistencePairs*) getPersistentPairs;
+- (instancetype)initWithDevice:(id<MTLDevice>)device Matrix:(SparseMatrix *)matrix;
+- (SparseMatrix *)makeReduction;
+- (PersistencePairs *)getPersistentPairs;
 @end
 
 NS_ASSUME_NONNULL_END
