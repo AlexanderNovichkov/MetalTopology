@@ -53,15 +53,19 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/Users/alex/Desktop/Education/4-cource/diploma/MetalTopologyBenchmark/datasets/vr_boundary_matrices/celegans_2_100000.0_metal.txt"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Users/alex/temp/metal-results/output.txt"
+            argument = "--gpuId"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "1"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/alex/Desktop/Education/4-cource/diploma/MetalTopologyBenchmark/datasets/vr_boundary_matrices/dragon_3_0.018_metal.txt"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/alex/temp/metal-results/output.txt"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

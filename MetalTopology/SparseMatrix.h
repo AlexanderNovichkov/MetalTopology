@@ -16,11 +16,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) index_t* colLengthsPtr;
 @property (readonly) index_t* rowIndicesPtr;
 
-- (instancetype) initWithDevice: (id<MTLDevice>) device FromFile: (NSString *) path;
++ (instancetype) readWithDevice: (id<MTLDevice>) device FromMatrixFile: (NSString *) path;
 
-- (instancetype) initWithDevice: (id<MTLDevice>) device N: (index_t) n;
++ (instancetype) readWithDevice: (id<MTLDevice>) device FromSimpliciesFile: (NSString *) path;
 
-- (void) writeToFile: (NSString *) path;
+- (instancetype) initWithDevice: (id<MTLDevice>) device ColOffsets: (const NSMutableData *) colOffsets
+                     ColLengths: (const NSMutableData *) colLengths RowIndices: (const NSMutableData *) rowIndices;
+
+- (instancetype) initWithDevice: (id<MTLDevice>) device N: (index_t) n nonZeros: (index_t) nonZeros;
+
+- (void) writeToMatrixFile: (NSString *) path;
 
 - (index_t) getNumberOfNonZeros;
 

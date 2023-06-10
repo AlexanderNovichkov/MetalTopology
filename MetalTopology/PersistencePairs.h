@@ -10,18 +10,17 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-
 @interface PersistencePairs : NSObject
 
-@property (readonly) NSMutableArray* pairs;
+@property(readonly) NSMutableArray *pairs;
 
-- (instancetype) init;
+- (instancetype)init;
 
-- (instancetype) initFromFile: (NSString *) path;
+- (instancetype)initFromFile:(NSString *)path;
 
-- (void) sortPairsByBirth;
+- (void)sortPairsByBirth;
 
-- (void) writeToFile: (NSString *) path;
+- (void)writeToFile:(NSString *)path;
 
 - (NSString *)description;
 

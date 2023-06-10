@@ -3,31 +3,65 @@
 #import "PhComputation.h"
 
 
+NSMutableDictionary* parseKeyValueArguments(int argc, const char * argv[]) {
+    NSMutableDictionary* argToVal = [NSMutableDictionary dictionary];
+    for(int i = 1; i < argc; i+=2) {
+        NSString *arg = [NSString stringWithUTF8String:argv[i]];
+        if (![arg hasPrefix:@"--"]) {
+            NSLog(@"Incorrect argument %@", arg);
+            exit(1);
+        }
+        if(i + 1 >= argc) {
+            NSLog(@"Value for argument %@ not set", arg);
+            exit(1);
+        }
+        NSString* val = [NSString stringWithUTF8String:argv[i+1]];
+        [argToVal setObject:val forKey:arg];
+    }
+    return argToVal;
+}
+
+
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        NSString *inputFile, *outputFile;
         long gpuId = 0;
-        
+        NSString* inputType = @"matrix";
+        NSString *inputFile, *outputFile;
         
         if(argc < 3) {
-            NSLog(@"Not enough arguments: argument 1 - path to input file, argument 2- path to output file, argument 3(optional) - GPU id (default 0)");
+            NSLog(@"Not enough arguments: argument 1 - path to input file, argument 2- path to output file");
         }
-        inputFile = [NSString stringWithUTF8String:argv[1]];
-        outputFile = [NSString stringWithUTF8String:argv[2]];
+        inputFile = [NSString stringWithUTF8String:argv[argc - 2]];
+        outputFile = [NSString stringWithUTF8String:argv[argc - 1]];
+
+        NSDictionary *argToVal = parseKeyValueArguments(argc - 2, argv);
+        if([argToVal objectForKey:@"--gpuId"] != nil) {
+            gpuId = [[argToVal objectForKey:@"--gpuId"] intValue];
         
-        if(argc >=4) {
-            gpuId = atol(argv[3]);
         }
-        
+        if([argToVal objectForKey:@"--inputType"] != nil) {
+            inputType = [argToVal objectForKey:@"--inputType"];
+        }
+
+        NSLog(@"gpuId=%lu", gpuId);
+        NSLog(@"inputType=%@", inputType);
         NSLog(@"inputFile=%@", inputFile);
         NSLog(@"outputFile=%@", outputFile);
-        NSLog(@"gpuId=%lu", gpuId);
+
         
         id<MTLDevice> device = MTLCopyAllDevices()[gpuId];
         NSLog(@"Using GPU with name: %@", [device name]);
         
         NSLog(@"Reading input matrix...");
-        SparseMatrix *matrix = [[SparseMatrix alloc] initWithDevice:device FromFile:inputFile];
+        SparseMatrix *matrix;
+        if([inputType isEqualToString: @"matrix"]) {
+            matrix = [SparseMatrix readWithDevice:device FromMatrixFile:inputFile];
+        } else if([inputType isEqualToString: @"matrix"]) {
+            matrix = [SparseMatrix readWithDevice:device FromSimpliciesFile:inputFile];
+        } else {
+            NSLog(@"Incorrect inputType=%@", inputType);
+            exit(1);
+        }
         if(matrix == nil) {
             NSLog(@"Error reading matrix");
             return -1;

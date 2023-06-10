@@ -10,15 +10,12 @@
 @implementation SparseMatrixTest
 {
     id<MTLDevice> _mDevice;
-    SparseMatrix* _matrix;
+    NSBundle * _bundle;
 }
 
 - (void)setUp {
     _mDevice = MTLCreateSystemDefaultDevice();
-    NSBundle *bundle = [NSBundle bundleForClass: [self class]];
-    NSString * path = [[bundle URLForResource:@"matrix_1" withExtension:@"txt"] path];
-    _matrix = [[SparseMatrix alloc] initWithDevice:_mDevice FromFile:path];
-    
+    _bundle = [NSBundle bundleForClass: [self class]];
 }
 
 - (void)tearDown {
@@ -26,14 +23,21 @@
 }
 
 
-
-- (void)testSize {
-    XCTAssertEqual(_matrix.n, 4);
+- (void) testReadFromSimpliciesFile {
+    NSString * path = [[_bundle URLForResource:@"simplicies_0" withExtension:@"txt"] path];
+    SparseMatrix*matrix = [SparseMatrix readWithDevice: _mDevice FromSimpliciesFile:path];
+    
+    XCTAssertEqualObjects([matrix description], @"7 9\n0\n0\n0\n2 0 1\n2 1 2\n2 0 2\n3 3 4 5\n");
+    XCTAssertEqual(matrix.n, 7);
 }
 
 
-- (void) testDescription {
-    XCTAssertEqualObjects([_matrix description], @"4 4\n0\n1 0\n2 0 1\n1 1\n");
+- (void) testReadFromMatrixFile {
+    NSString * path = [[_bundle URLForResource:@"matrix_1" withExtension:@"txt"] path];
+    SparseMatrix*matrix = [SparseMatrix readWithDevice: _mDevice FromMatrixFile:path];
+    
+    XCTAssertEqualObjects([matrix description], @"4 4\n0\n1 0\n2 0 1\n1 1\n");
+    XCTAssertEqual(matrix.n, 4);
 }
 
 @end

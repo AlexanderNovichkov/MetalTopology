@@ -1,73 +1,145 @@
 #import "SparseMatrix.h"
 #import <stdint.h>
 
+#import "SparseMatrixBuilder.h"
+
 @implementation SparseMatrix
 {
 }
 
-- (instancetype) initWithDevice: (id<MTLDevice>) device FromFile: (NSString *) path
++ (instancetype) readWithDevice: (id<MTLDevice>) device FromMatrixFile: (NSString *) path
+{
+    NSString * fileContents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
+    NSScanner *scanner=[NSScanner scannerWithString:fileContents];
+    
+    unsigned long long columns;
+    if(![scanner scanUnsignedLongLong:&columns]) {
+        NSLog(@"First number in file should set number of columns (simplices)");
+        return nil;
+    }
+    
+    unsigned long long nonZeros;
+    if(![scanner scanUnsignedLongLong:&nonZeros]) {
+        NSLog(@"Second number in file should set number of non-zero elements in boundary matrix");
+        return nil;
+    }
+    
+    SparseMatrixBuilder * builder = [[SparseMatrixBuilder alloc] initWithInitialColumnsCapacity:columns InitialNonZeroElementsCapacity:nonZeros];
+    
+    
+    for(index_t col = 0; col < columns; col++){
+        [builder addColumn];
+        unsigned long long colSize;
+        if(![scanner scanUnsignedLongLong:&colSize]) {
+            NSLog(@"Error reading number of elements in column %u", col);
+            return nil;
+        }
+        
+        for(index_t i = 0; i < colSize;i++) {
+            unsigned long long row;
+            if(![scanner scanUnsignedLongLong:&row]) {
+                NSLog(@"Error reading nonZero row # %u for column # %u with length %llu", i, col, row);
+                return nil;
+            }
+            [builder addNonZeroRowForLastColumn:row];
+        }
+    }
+    
+    if([builder getNonZeroElementsCount] != nonZeros) {
+        NSLog(@"Actual number of non-zero elements=%u is not equal to number set in file=%u", [builder getNonZeroElementsCount], nonZeros);
+        return nil;
+    }
+    
+    return [builder buildWithDevice:device];
+}
+
++ (instancetype) readWithDevice: (id<MTLDevice>) device FromSimpliciesFile: (NSString *) path{
+    NSString * fileContents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
+    NSScanner *scanner = [NSScanner scannerWithString:fileContents];
+
+    unsigned long long simpliciesCount;
+    if(![scanner scanUnsignedLongLong:&simpliciesCount]) {
+        NSLog(@"First number in file should set number of simplices");
+        return nil;
+    }
+
+    SparseMatrixBuilder * builder = [[SparseMatrixBuilder alloc] initWithInitialColumnsCapacity:simpliciesCount InitialNonZeroElementsCapacity:0];
+    
+    NSMutableDictionary *simplexToId = [NSMutableDictionary dictionary];
+    for(index_t simplexId = 0; simplexId < simpliciesCount; simplexId++) {
+        [builder addColumn];
+        
+        unsigned long long vertexCount;
+        if(![scanner scanUnsignedLongLong:&vertexCount]) {
+            NSLog(@"Error reading vertex count of simplex %u", simplexId);
+            return nil;
+        }
+        NSMutableArray *simplex  = [NSMutableArray arrayWithCapacity:vertexCount];
+        for(index_t vertexId = 0; vertexId < vertexCount; vertexId++) {
+            unsigned long long vertex;
+            if(![scanner scanUnsignedLongLong:&vertex]) {
+                NSLog(@"Error reading vertex # %u of simplex %u", vertexId, simplexId);
+                return nil;
+            }
+            [simplex addObject:[NSNumber numberWithLongLong: vertex]];
+        }
+        [simplexToId setObject:[NSNumber numberWithLongLong: simplexId] forKey:simplex];
+    
+        
+        if (vertexCount == 1) {
+            continue;
+        }
+
+        NSMutableArray *boundary = [NSMutableArray arrayWithCapacity: vertexCount];
+        for(index_t vertexId = 0; vertexId < vertexCount; vertexId++) {
+            NSNumber* vertex = [simplex objectAtIndex:vertexId];
+            [simplex removeObjectAtIndex:vertexId];
+    
+            NSNumber* simplexId = [simplexToId objectForKey:simplex];
+            if(simplexId == nil) {
+                1;
+            }
+            [boundary addObject:simplexId];
+            
+            [simplex insertObject:vertex atIndex:vertexId];
+        }
+        
+        [boundary sortUsingSelector:@selector(compare:)];
+        for(NSNumber* boundarySimplexId in boundary) {
+            [builder addNonZeroRowForLastColumn:[boundarySimplexId unsignedLongLongValue]];
+        }
+    }
+    
+    return [builder buildWithDevice:device];
+}
+
+
+- (instancetype) initWithDevice: (id<MTLDevice>) device ColOffsets: (const NSMutableData *) colOffsets
+                     ColLengths: (const NSMutableData *) colLengths RowIndices: (const NSMutableData *) rowIndices
 {
     self = [super init];
     if(self){
-        NSString * fileContents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
-        NSScanner *scanner=[NSScanner scannerWithString:fileContents];
-        
-        unsigned long long value;
-        if(![scanner scanUnsignedLongLong:&value]) {
-            NSLog(@"First number in file should set number of columns (simplices)");
-            return nil;
-        }
-        _n = value;
-        
-        if(![scanner scanUnsignedLongLong:&value]) {
-            NSLog(@"Second number in file should set number of non-zero elements in boundary matrix");
-            return nil;
-        }
-        index_t nonZeros =  value;
-        
-        self.colOffsets = [device newBufferWithLength:_n * sizeof(index_t) options:MTLResourceStorageModeShared];
-        self.colLengths = [device newBufferWithLength:_n * sizeof(index_t) options:MTLResourceStorageModeShared];
-        self.rowIndices = [device newBufferWithLength:nonZeros * sizeof(index_t) options:MTLResourceStorageModeShared];
-        
-        
-        index_t rowIndicesPos = 0;
-        for(index_t col = 0; col < _n; col++){
-            if(![scanner scanUnsignedLongLong:&value]) {
-                NSLog(@"Error reading number of elements in column %u", col);
-                return nil;
-            }
-            _colLengthsPtr[col] = value;
-            _colOffsetsPtr[col] = rowIndicesPos;
-            
-            for(index_t i = 0; i < _colLengthsPtr[col];i++) {
-                if(![scanner scanUnsignedLongLong:&value]) {
-                    NSLog(@"Error reading element # %u for column # %u with length %llu", i, col, _colLengthsPtr[col]);
-                    return nil;
-                }
-                _rowIndicesPtr[rowIndicesPos++] = value;
-            }
-        }
-        
-        if(rowIndicesPos != nonZeros) {
-            NSLog(@"Actual number of non-zero elements=%u is not equal to number set in file=%u", rowIndicesPos, nonZeros);
-            return nil;
-        }
+        _n = [colOffsets length] / sizeof(index_t);
+        self.colOffsets = [device newBufferWithBytes:[colOffsets mutableBytes] length:[colOffsets length] options:MTLResourceStorageModeShared];
+        self.colLengths = [device newBufferWithBytes:[colLengths mutableBytes] length:[colLengths length] options:MTLResourceStorageModeShared];
+        self.rowIndices = [device newBufferWithBytes:[rowIndices mutableBytes] length:[rowIndices length] options:MTLResourceStorageModeShared];
     }
     return self;
 }
 
-- (instancetype) initWithDevice: (id<MTLDevice>) device N: (index_t) n {
+
+- (instancetype) initWithDevice: (id<MTLDevice>) device N: (index_t) n nonZeros: (index_t) nonZeros {
     self = [super init];
     if(self) {
         _n = n;
         self.colOffsets = [device newBufferWithLength:_n * sizeof(index_t) options:MTLResourceStorageModeShared];
         self.colLengths = [device newBufferWithLength:_n * sizeof(index_t) options:MTLResourceStorageModeShared];
-        self.rowIndices = [device newBufferWithLength: 1 * sizeof(index_t) options:MTLResourceStorageModeShared];
+        self.rowIndices = [device newBufferWithLength: nonZeros * sizeof(index_t) options:MTLResourceStorageModeShared];
     }
     return self;
 }
 
-- (void) writeToFile: (NSString *) path {
+- (void) writeToMatrixFile: (NSString *) path {
     NSString *str = [self description];
     [str writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
 }

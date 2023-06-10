@@ -254,7 +254,7 @@ void swapMatrixPtrs ( SparseMatrix* __strong * ptrA, SparseMatrix *__strong* ptr
         _leftRightPairs = [_mDevice newBufferWithLength:matrix.n * sizeof(struct LeftRightPair) options:MTLResourceStorageModeShared];
         _leftRightPairsPtr = _leftRightPairs.contents;
         
-        _matrixToSumCols = [[SparseMatrix alloc] initWithDevice: _mDevice N:_matrix.n];
+        _matrixToSumCols = [[SparseMatrix alloc] initWithDevice: _mDevice N:_matrix.n nonZeros:1];
         
         
         _matrixOffsetsBlocksCount = (matrix.n + OFFSETS_BLOCK_SIZE - 1) / OFFSETS_BLOCK_SIZE;

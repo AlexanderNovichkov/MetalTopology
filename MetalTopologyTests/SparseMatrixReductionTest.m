@@ -58,7 +58,7 @@
 - (SparseMatrix*) readMatrixFromFile: (NSString*) filename {
     NSBundle *bundle = [NSBundle bundleForClass: [self class]];
     NSString * path = [[bundle URLForResource:filename withExtension: nil] path];
-    SparseMatrix *matrix =  [[SparseMatrix alloc] initWithDevice:_mDevice FromFile:path];
+    SparseMatrix *matrix =  [SparseMatrix readWithDevice:_mDevice FromMatrixFile:path];
     assert(matrix != nil);
     return matrix;
 }
