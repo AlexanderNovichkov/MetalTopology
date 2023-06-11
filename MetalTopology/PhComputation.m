@@ -243,13 +243,15 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
     _nonZeroColsCount = [_mDevice newBufferWithLength:sizeof(index_t)
                                               options:MTLResourceStorageModeShared];
     _nonZeroColsCountPtr = _nonZeroColsCount.contents;
+    
     _nonZeroCols = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
                                          options:MTLResourceStorageModeManaged];
 
     _low = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
                                  options:MTLResourceStorageModeManaged];
+    
     _leftColByLow = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
-                                          options:MTLResourceStorageModeShared];
+                                          options:MTLResourceStorageModePrivate];
 
     _leftColsCount = [_mDevice newBufferWithLength:sizeof(index_t)
                                            options:MTLResourceStorageModeShared];
