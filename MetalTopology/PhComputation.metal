@@ -5,6 +5,52 @@
 
 using namespace metal;
 
+kernel void makeInitialClearing(device const index_t *matrixColOffsets,
+                                device index_t *matrixColLengths,
+                                device const index_t *matrixRowIndices,
+                                uint col [[thread_position_in_grid]]) {
+  index_t length = matrixColLengths[col];
+  if (length != 0) {
+    index_t offset = matrixColOffsets[col];
+    index_t low = matrixRowIndices[offset + length - 1];
+    matrixColLengths[low] = 0;
+  }
+}
+
+kernel void initNonZeroCols(device const index_t *matrixColLengths,
+                            device index_t *nonZeroCols,
+                            device atomic_index_t *nonZeroColsCount,
+                            uint col [[thread_position_in_grid]]) {
+  if (matrixColLengths[col] != 0) {
+    index_t pos = atomic_fetch_add_explicit(nonZeroColsCount, 1, memory_order_relaxed);
+    nonZeroCols[pos] = col;
+  }
+}
+
+kernel void fillLeftColByLow(device index_t *leftColByLow, uint low [[thread_position_in_grid]]) {
+  leftColByLow[low] = MAX_INDEX;
+}
+
+kernel void initLowAndLeftColByLow(device const index_t *matrixColOffsets,
+                                   device const index_t *matrixColLengths,
+                                   device const index_t *matrixRowIndices,
+                                   device index_t *lows,
+                                   device atomic_index_t *leftColByLow,
+                                   device const index_t *nonZeroCols,
+                                   uint nonZeroColsIdx [[thread_position_in_grid]]) {
+  const index_t col = nonZeroCols[nonZeroColsIdx];
+  const index_t length = matrixColLengths[col];
+  if (length == 0) {
+    lows[col] = MAX_INDEX;
+    return;
+  }
+
+  const index_t offset = matrixColOffsets[col];
+  const index_t l = matrixRowIndices[offset + length - 1];
+  lows[col] = l;
+  atomic_fetch_min_explicit(&leftColByLow[l], col, memory_order_relaxed);
+}
+
 kernel void computeMatrixOffsetsBlockSums(device const index_t *resultMatrixColLengths,
                                           device index_t *matrixOffsetsBlockSums,
                                           device const index_t *matrixSize,

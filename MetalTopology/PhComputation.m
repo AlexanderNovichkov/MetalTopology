@@ -19,6 +19,10 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   // metal variables
   id<MTLDevice> _mDevice;
   id<MTLCommandQueue> _mCommandQueue;
+  id<MTLComputePipelineState> _mMakeInitialClearingPSO;
+  id<MTLComputePipelineState> _mInitNonZeroColsPSO;
+  id<MTLComputePipelineState> _mFillLeftColByLowPSO;
+  id<MTLComputePipelineState> _mInitLowAndLeftColByLowPSO;
   id<MTLComputePipelineState> _mExecuteLeftRightAdditionsPSO;
   id<MTLComputePipelineState> _mComputeLowAndLeftColByLowPSO;
   id<MTLComputePipelineState> _mComputeNonZeroColsPSO;
@@ -75,6 +79,56 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
         [_mDevice newDefaultLibraryWithBundle:[NSBundle bundleForClass:[self class]] error:nil];
     if (defaultLibrary == nil) {
       NSLog(@"Failed to find the default library.");
+      return nil;
+    }
+
+    id<MTLFunction> makeInitialClearing =
+        [defaultLibrary newFunctionWithName:@"makeInitialClearing"];
+    if (makeInitialClearing == nil) {
+      NSLog(@"Failed to find metal function makeClearing");
+      return nil;
+    }
+    _mMakeInitialClearingPSO = [_mDevice newComputePipelineStateWithFunction:makeInitialClearing
+                                                                       error:&error];
+    if (_mMakeInitialClearingPSO == nil) {
+      NSLog(@"Failed to created pipeline state object, error %@.", error);
+      return nil;
+    }
+
+    id<MTLFunction> initNonZeroCols = [defaultLibrary newFunctionWithName:@"initNonZeroCols"];
+    if (initNonZeroCols == nil) {
+      NSLog(@"Failed to find metal function InitNonZeroCols");
+      return nil;
+    }
+    _mInitNonZeroColsPSO = [_mDevice newComputePipelineStateWithFunction:initNonZeroCols
+                                                                   error:&error];
+    if (_mInitNonZeroColsPSO == nil) {
+      NSLog(@"Failed to created pipeline state object, error %@.", error);
+      return nil;
+    }
+
+    id<MTLFunction> fillLeftColByLow = [defaultLibrary newFunctionWithName:@"fillLeftColByLow"];
+    if (fillLeftColByLow == nil) {
+      NSLog(@"Failed to find metal function fillLeftColByLow");
+      return nil;
+    }
+    _mFillLeftColByLowPSO = [_mDevice newComputePipelineStateWithFunction:fillLeftColByLow
+                                                                    error:&error];
+    if (_mFillLeftColByLowPSO == nil) {
+      NSLog(@"Failed to created pipeline state object, error %@.", error);
+      return nil;
+    }
+
+    id<MTLFunction> initLowAndLeftColByLow =
+        [defaultLibrary newFunctionWithName:@"initLowAndLeftColByLow"];
+    if (initLowAndLeftColByLow == nil) {
+      NSLog(@"Failed to find metal function initLowAndLeftColByLow");
+      return nil;
+    }
+    _mInitLowAndLeftColByLowPSO =
+        [_mDevice newComputePipelineStateWithFunction:initLowAndLeftColByLow error:&error];
+    if (_mInitLowAndLeftColByLowPSO == nil) {
+      NSLog(@"Failed to created pipeline state object, error %@.", error);
       return nil;
     }
 
@@ -189,26 +243,12 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
 
     _matrix = matrix;
 
-    for (index_t col = 0; col < _matrix.n; col++) {
-      index_t length = _matrix.colLengthsPtr[col];
-      if (length != 0) {
-        index_t offset = _matrix.colOffsetsPtr[col];
-        index_t low = _matrix.rowIndicesPtr[offset + length - 1];
-        matrix.colLengthsPtr[low] = 0;
-      }
-    }
-
     _nonZeroColsCount = [_mDevice newBufferWithLength:sizeof(index_t)
                                               options:MTLResourceStorageModeShared];
     _nonZeroColsCountPtr = _nonZeroColsCount.contents;
     _nonZeroCols = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
                                          options:MTLResourceStorageModeShared];
     _nonZeroColsPtr = _nonZeroCols.contents;
-    for (index_t col = 0; col < _matrix.n; col++) {
-      if (_matrix.colLengthsPtr[col] != 0) {
-        _nonZeroColsPtr[(*_nonZeroColsCountPtr)++] = col;
-      }
-    }
 
     _low = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
                                  options:MTLResourceStorageModeShared];
@@ -216,22 +256,6 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
     _leftColByLow = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
                                           options:MTLResourceStorageModeShared];
     _leftColByLowPtr = _leftColByLow.contents;
-    for (index_t col = 0; col < _matrix.n; col++) {
-      _leftColByLowPtr[col] = MAX_INDEX;
-    }
-    for (index_t col = 0; col < _matrix.n; col++) {
-      index_t length = _matrix.colLengthsPtr[col];
-      if (length == 0) {
-        _lowPtr[col] = MAX_INDEX;
-      } else {
-        index_t offset = _matrix.colOffsetsPtr[col];
-        index_t low = _matrix.rowIndicesPtr[offset + length - 1];
-        _lowPtr[col] = low;
-        if (_leftColByLowPtr[low] > col) {
-          _leftColByLowPtr[low] = col;
-        }
-      }
-    }
 
     _leftColsCount = [_mDevice newBufferWithLength:sizeof(index_t)
                                            options:MTLResourceStorageModeShared];
@@ -283,6 +307,10 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
 - (SparseMatrix *)makeReduction {
   NSDate *start = [NSDate date];
 
+  [self syncMatrixAndMakeInitialClearingOnGpu];
+  [self initNonZeroColsOnGpu];
+  [self initLowAndLeftColByLowOnGpu];
+
   index_t it = 0;
   while (true) {
     @autoreleasepool {
@@ -306,6 +334,93 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   _computationTimeTotal = [[NSDate date] timeIntervalSinceDate:start];
 
   return _matrix;
+}
+
+- (void)syncMatrixAndMakeInitialClearingOnGpu {
+  NSLog(@"Start method syncMatrixAndMakeInitialClearingOnGpu");
+
+  id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
+  assert(commandBuffer != nil);
+  id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
+  assert(computeEncoder != nil);
+
+  //  [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
+  //  [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
+  //  [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
+
+  [computeEncoder setComputePipelineState:_mMakeInitialClearingPSO];
+  [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
+  [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
+  [computeEncoder setBuffer:_matrix.rowIndices offset:0 atIndex:2];
+  MTLSize gridSize = MTLSizeMake(_matrix.n, 1, 1);
+
+  NSUInteger threadsInThreadgroup =
+      MIN(_mMakeInitialClearingPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
+  MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
+
+  [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+  [computeEncoder endEncoding];
+
+  [commandBuffer commit];
+  [commandBuffer waitUntilCompleted];
+}
+
+- (void)initNonZeroColsOnGpu {
+  NSLog(@"Start method initNonZeroColsOnGpu");
+  id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
+  assert(commandBuffer != nil);
+  id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
+  assert(computeEncoder != nil);
+
+  [computeEncoder setComputePipelineState:_mInitNonZeroColsPSO];
+  [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:0];
+  [computeEncoder setBuffer:_nonZeroCols offset:0 atIndex:1];
+  [computeEncoder setBuffer:_nonZeroColsCount offset:0 atIndex:2];
+
+  MTLSize gridSize = MTLSizeMake(_matrix.n, 1, 1);
+
+  NSUInteger threadsInThreadgroup =
+      MIN(_mInitNonZeroColsPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
+  MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
+
+  [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+  [computeEncoder endEncoding];
+
+  [commandBuffer commit];
+  [commandBuffer waitUntilCompleted];
+}
+
+- (void)initLowAndLeftColByLowOnGpu {
+  NSLog(@"Start method initLowAndLeftColByLowOnGpu");
+  id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
+  assert(commandBuffer != nil);
+  id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
+  assert(computeEncoder != nil);
+
+  [computeEncoder setComputePipelineState:_mFillLeftColByLowPSO];
+  [computeEncoder setBuffer:_leftColByLow offset:0 atIndex:0];
+  MTLSize gridSize = MTLSizeMake(_matrix.n, 1, 1);
+  NSUInteger threadsInThreadgroup =
+      MIN(_mFillLeftColByLowPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
+  MTLSize threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
+  [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+
+  [computeEncoder setComputePipelineState:_mInitLowAndLeftColByLowPSO];
+  [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
+  [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
+  [computeEncoder setBuffer:_matrix.rowIndices offset:0 atIndex:2];
+  [computeEncoder setBuffer:_low offset:0 atIndex:3];
+  [computeEncoder setBuffer:_leftColByLow offset:0 atIndex:4];
+  [computeEncoder setBuffer:_nonZeroCols offset:0 atIndex:5];
+  gridSize = MTLSizeMake(*_nonZeroColsCountPtr, 1, 1);
+  threadsInThreadgroup =
+      MIN(_mInitLowAndLeftColByLowPSO.maxTotalThreadsPerThreadgroup, gridSize.width);
+  threadgroupSize = MTLSizeMake(threadsInThreadgroup, 1, 1);
+  [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
+
+  [computeEncoder endEncoding];
+  [commandBuffer commit];
+  [commandBuffer waitUntilCompleted];
 }
 
 - (void)makeLeftRightColsAdditions {

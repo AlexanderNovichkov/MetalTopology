@@ -7,8 +7,8 @@ FOUNDATION_EXPORT double MetalTopologyVersionNumber;
 FOUNDATION_EXPORT const unsigned char MetalTopologyVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like
+#import <MetalTopology/PersistencePairs.h>
+#import <MetalTopology/PhComputation.h>
 #import <MetalTopology/SparseMatrix.h>
 #import <MetalTopology/SparseMatrixBuilder.h>
-#import <MetalTopology/PhComputation.h>
-#import <MetalTopology/PersistencePairs.h>
 #import <MetalTopology/Types.h>

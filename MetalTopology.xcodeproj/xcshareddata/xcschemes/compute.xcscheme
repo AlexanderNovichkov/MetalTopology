@@ -61,7 +61,7 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/alex/Desktop/Education/4-cource/diploma/MetalTopologyBenchmark/datasets/vr_boundary_matrices/dragon_3_0.018_metal.txt"
+            argument = "/Users/alex/Desktop/Education/4-cource/diploma/MetalTopologyBenchmark/datasets/vr_boundary_matrices/human_gene_2_45.0_metal.txt"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
