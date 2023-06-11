@@ -128,13 +128,13 @@
     _n = [colOffsets length] / sizeof(index_t);
     self.colOffsets = [device newBufferWithBytes:[colOffsets mutableBytes]
                                           length:[colOffsets length]
-                                         options:MTLResourceStorageModeShared];
+                                         options:MTLResourceStorageModeManaged];
     self.colLengths = [device newBufferWithBytes:[colLengths mutableBytes]
                                           length:[colLengths length]
-                                         options:MTLResourceStorageModeShared];
+                                         options:MTLResourceStorageModeManaged];
     self.rowIndices = [device newBufferWithBytes:[rowIndices mutableBytes]
                                           length:[rowIndices length]
-                                         options:MTLResourceStorageModeShared];
+                                         options:MTLResourceStorageModeManaged];
   }
   return self;
 }
@@ -144,11 +144,11 @@
   if (self) {
     _n = n;
     self.colOffsets = [device newBufferWithLength:_n * sizeof(index_t)
-                                          options:MTLResourceStorageModeShared];
+                                          options:MTLResourceStorageModeManaged];
     self.colLengths = [device newBufferWithLength:_n * sizeof(index_t)
-                                          options:MTLResourceStorageModeShared];
+                                          options:MTLResourceStorageModeManaged];
     self.rowIndices = [device newBufferWithLength:nonZeros * sizeof(index_t)
-                                          options:MTLResourceStorageModeShared];
+                                          options:MTLResourceStorageModeManaged];
   }
   return self;
 }

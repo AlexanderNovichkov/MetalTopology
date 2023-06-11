@@ -18,7 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(readonly) double executeCopyLeftColumnsOnGpuTime;
 
 - (instancetype)initWithDevice:(id<MTLDevice>)device Matrix:(SparseMatrix *)matrix;
-- (SparseMatrix *)makeReduction;
+- (void)makeReduction;
+- (SparseMatrix *)getReducedMatrix;
 - (PersistencePairs *)getPersistentPairs;
 @end
 

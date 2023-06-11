@@ -36,29 +36,23 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   SparseMatrix *_matrix;
 
   id<MTLBuffer> _low;
-  index_t *_lowPtr;
   id<MTLBuffer> _leftColByLow;
-  index_t *_leftColByLowPtr;
 
   id<MTLBuffer> _nonZeroColsCount;
   index_t *_nonZeroColsCountPtr;
   id<MTLBuffer> _nonZeroCols;
-  index_t *_nonZeroColsPtr;
 
   id<MTLBuffer> _leftColsCount;
   index_t *_leftColsCountPtr;
   id<MTLBuffer> _leftCols;
-  index_t *_leftColsPtr;
 
   id<MTLBuffer> _leftRightPairsCount;
   index_t *_leftRightPairsCountPtr;
   id<MTLBuffer> _leftRightPairs;
-  struct LeftRightPair *_leftRightPairsPtr;
 
   // Optimization variables, allow us not to allocate memory every iteration
   SparseMatrix *_matrixToSumCols;
   id<MTLBuffer> _nonZeroColsResult;
-  index_t *_nonZeroColsResultPtr;
 
   index_t _matrixOffsetsBlocksCount;
   id<MTLBuffer> _matrixOffsetsBlockSums;
@@ -242,34 +236,32 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
     }
 
     _matrix = matrix;
+    [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
+    [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
+    [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
 
     _nonZeroColsCount = [_mDevice newBufferWithLength:sizeof(index_t)
                                               options:MTLResourceStorageModeShared];
     _nonZeroColsCountPtr = _nonZeroColsCount.contents;
     _nonZeroCols = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
-                                         options:MTLResourceStorageModeShared];
-    _nonZeroColsPtr = _nonZeroCols.contents;
+                                         options:MTLResourceStorageModeManaged];
 
     _low = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
-                                 options:MTLResourceStorageModeShared];
-    _lowPtr = _low.contents;
+                                 options:MTLResourceStorageModeManaged];
     _leftColByLow = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
                                           options:MTLResourceStorageModeShared];
-    _leftColByLowPtr = _leftColByLow.contents;
 
     _leftColsCount = [_mDevice newBufferWithLength:sizeof(index_t)
                                            options:MTLResourceStorageModeShared];
     _leftColsCountPtr = _leftColsCount.contents;
     _leftCols = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
-                                      options:MTLResourceStorageModeShared];
-    _leftColsPtr = _leftCols.contents;
+                                      options:MTLResourceStorageModePrivate];
 
     _leftRightPairsCount = [_mDevice newBufferWithLength:sizeof(index_t)
                                                  options:MTLResourceStorageModeShared];
     _leftRightPairsCountPtr = _leftRightPairsCount.contents;
     _leftRightPairs = [_mDevice newBufferWithLength:matrix.n * sizeof(struct LeftRightPair)
-                                            options:MTLResourceStorageModeShared];
-    _leftRightPairsPtr = _leftRightPairs.contents;
+                                            options:MTLResourceStorageModePrivate];
 
     _matrixToSumCols = [[SparseMatrix alloc] initWithDevice:_mDevice N:_matrix.n nonZeros:1];
 
@@ -280,8 +272,7 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
     _matrixOffsetsBlockSumsPtr = _matrixOffsetsBlockSums.contents;
 
     _nonZeroColsResult = [_mDevice newBufferWithLength:matrix.n * sizeof(index_t)
-                                               options:MTLResourceStorageModeShared];
-    _nonZeroColsResultPtr = _nonZeroColsResult.contents;
+                                               options:MTLResourceStorageModeManaged];
 
     _matrixSize = [_mDevice newBufferWithLength:sizeof(index_t)
                                         options:MTLResourceStorageModeShared];
@@ -291,23 +282,10 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   return self;
 }
 
-- (PersistencePairs *)getPersistentPairs {
-  PersistencePairs *pairs = [[PersistencePairs alloc] init];
-  for (index_t i = 0; i < *_nonZeroColsCountPtr; i++) {
-    index_t col = _nonZeroColsPtr[i];
-    PersistencePair *pair = [[PersistencePair alloc] init];
-    pair.birth = _lowPtr[col];
-    pair.death = col;
-    [pairs.pairs addObject:pair];
-  }
-  [pairs sortPairsByBirth];
-  return pairs;
-}
-
-- (SparseMatrix *)makeReduction {
+- (void)makeReduction {
   NSDate *start = [NSDate date];
 
-  [self syncMatrixAndMakeInitialClearingOnGpu];
+  [self makeInitialClearingOnGpu];
   [self initNonZeroColsOnGpu];
   [self initLowAndLeftColByLowOnGpu];
 
@@ -332,21 +310,15 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   }
 
   _computationTimeTotal = [[NSDate date] timeIntervalSinceDate:start];
-
-  return _matrix;
 }
 
-- (void)syncMatrixAndMakeInitialClearingOnGpu {
-  NSLog(@"Start method syncMatrixAndMakeInitialClearingOnGpu");
+- (void)makeInitialClearingOnGpu {
+  NSLog(@"Start method makeInitialClearingOnGpu");
 
   id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
   assert(commandBuffer != nil);
   id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
   assert(computeEncoder != nil);
-
-  //  [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
-  //  [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
-  //  [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
 
   [computeEncoder setComputePipelineState:_mMakeInitialClearingPSO];
   [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
@@ -425,11 +397,11 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
 
 - (void)makeLeftRightColsAdditions {
   [self computeMatrixColLengthsOnGpu];
-  [self computeMatrixColOffsets];
-  [self computeMatrixRowIndices];
+  index_t maxNonZeros = [self computeMatrixColOffsets];
+  [self computeMatrixRowIndicesWithMaxNonZeros:maxNonZeros];
 }
 
-- (void)computeMatrixColOffsets {
+- (index_t)computeMatrixColOffsets {
   NSLog(@"Start method computeMatrixColOffsets");
   NSDate *start = [NSDate date];
 
@@ -438,12 +410,14 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   for (index_t blockId = 1; blockId < _matrixOffsetsBlocksCount; blockId++) {
     _matrixOffsetsBlockSumsPtr[blockId] += _matrixOffsetsBlockSumsPtr[blockId - 1];
   }
+  index_t maxNonZeros = _matrixOffsetsBlockSumsPtr[_matrixOffsetsBlocksCount - 1];
 
   [self computeMatrixOffsetsOnGpu];
 
   NSTimeInterval executionTime = [[NSDate date] timeIntervalSinceDate:start];
   NSLog(@"computeMatrixColOffsets execution time = %f", 1000 * executionTime);
   _computeMatrixColOffsetsTime += executionTime;
+  return maxNonZeros;
 }
 
 - (void)computeMatrixOffsetsBlockSumsOnGpu {
@@ -503,13 +477,11 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   NSLog(@"computeMatrixOffsetsOnGpu execution time = %f", 1000 * executionTime);
 }
 
-- (void)computeMatrixRowIndices {
-  index_t maxNonZeros =
-      _matrixToSumCols.colOffsetsPtr[_matrix.n - 1] + _matrixToSumCols.colLengthsPtr[_matrix.n - 1];
+- (void)computeMatrixRowIndicesWithMaxNonZeros:(uint32_t)maxNonZeros {
   unsigned long minBufSize = maxNonZeros * sizeof(index_t);
   if (minBufSize > _matrixToSumCols.rowIndices.length) {
     _matrixToSumCols.rowIndices = [_mDevice newBufferWithLength:minBufSize * 2
-                                                        options:MTLResourceStorageModeShared];
+                                                        options:MTLResourceStorageModeManaged];
     NSLog(@"MAKE ALLOCATION %lu", minBufSize * 2);
   }
 
@@ -562,16 +534,6 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   id<MTLComputeCommandEncoder> computeEncoder = [commandBuffer computeCommandEncoder];
   assert(computeEncoder != nil);
 
-  //    [_matrix.colOffsets didModifyRange:NSMakeRange(0, _matrix.colOffsets.length)];
-  //    [_matrix.colLengths didModifyRange:NSMakeRange(0, _matrix.colLengths.length)];
-  //    [_matrix.rowIndices didModifyRange:NSMakeRange(0, _matrix.rowIndices.length)];
-  //    [_matrixToSumCols.colOffsets didModifyRange:NSMakeRange(0,
-  //    _matrixToSumCols.colOffsets.length)];
-  //    [_matrixToSumCols.colLengths didModifyRange:NSMakeRange(0,
-  //    _matrixToSumCols.colLengths.length)];
-  //    [_matrixToSumCols.rowIndices didModifyRange:NSMakeRange(0,
-  //    _matrixToSumCols.rowIndices.length)];
-
   [computeEncoder setComputePipelineState:_mExecuteLeftRightAdditionsPSO];
   [computeEncoder setBuffer:_matrix.colOffsets offset:0 atIndex:0];
   [computeEncoder setBuffer:_matrix.colLengths offset:0 atIndex:1];
@@ -589,13 +551,6 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
 
   [computeEncoder dispatchThreads:gridSize threadsPerThreadgroup:threadgroupSize];
   [computeEncoder endEncoding];
-
-  //    // Synchronize the managed buffer.
-  //    id <MTLBlitCommandEncoder> blitCommandEncoder = [commandBuffer blitCommandEncoder];
-  //    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colOffsets];
-  //    [blitCommandEncoder synchronizeResource:_matrixToSumCols.colLengths];
-  //    [blitCommandEncoder synchronizeResource:_matrixToSumCols.rowIndices];
-  //    [blitCommandEncoder endEncoding];
 
   [commandBuffer commit];
   [commandBuffer waitUntilCompleted];
@@ -743,8 +698,6 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   [commandBuffer commit];
   [commandBuffer waitUntilCompleted];
 
-  swapIndexPtrs(&_nonZeroColsPtr, &_nonZeroColsResultPtr);
-
   id<MTLBuffer> temp = _nonZeroCols;
   _nonZeroCols = _nonZeroColsResult;
   _nonZeroColsResult = temp;
@@ -753,6 +706,57 @@ void swapMatrixPtrs(SparseMatrix *__strong *ptrA, SparseMatrix *__strong *ptrB) 
   NSTimeInterval executionTime = [methodFinish timeIntervalSinceDate:methodStart];
   NSLog(@"computeNonZeroColsGPUTime execution time = %f", 1000 * executionTime);
   _computeNonZeroColsGPUTime += executionTime;
+}
+
+- (PersistencePairs *)getPersistentPairs {
+  [self syncLowAndNonZeroColsFromGpu];
+  index_t *lowPtr = _low.contents;
+  index_t *nonZeroColsPtr = _nonZeroCols.contents;
+
+  PersistencePairs *pairs = [[PersistencePairs alloc] init];
+  for (index_t i = 0; i < *_nonZeroColsCountPtr; i++) {
+    index_t col = nonZeroColsPtr[i];
+    PersistencePair *pair = [[PersistencePair alloc] init];
+    pair.birth = lowPtr[col];
+    pair.death = col;
+    [pairs.pairs addObject:pair];
+  }
+  [pairs sortPairsByBirth];
+  return pairs;
+}
+
+- (void)syncLowAndNonZeroColsFromGpu {
+  NSLog(@"Start method syncLowAndNonZeroColsFromGpu");
+  id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
+  assert(commandBuffer != nil);
+
+  id<MTLBlitCommandEncoder> blitCommandEncoder = [commandBuffer blitCommandEncoder];
+  [blitCommandEncoder synchronizeResource:_low];
+  [blitCommandEncoder synchronizeResource:_nonZeroCols];
+  [blitCommandEncoder endEncoding];
+
+  [commandBuffer commit];
+  [commandBuffer waitUntilCompleted];
+}
+
+- (SparseMatrix *)getReducedMatrix {
+  [self syncMatrixFromGpu];
+  return _matrix;
+}
+
+- (void)syncMatrixFromGpu {
+  NSLog(@"Start method syncMatrixFromGpu");
+  id<MTLCommandBuffer> commandBuffer = [_mCommandQueue commandBuffer];
+  assert(commandBuffer != nil);
+
+  id<MTLBlitCommandEncoder> blitCommandEncoder = [commandBuffer blitCommandEncoder];
+  [blitCommandEncoder synchronizeResource:_matrix.colLengths];
+  [blitCommandEncoder synchronizeResource:_matrix.colOffsets];
+  [blitCommandEncoder synchronizeResource:_matrix.rowIndices];
+  [blitCommandEncoder endEncoding];
+
+  [commandBuffer commit];
+  [commandBuffer waitUntilCompleted];
 }
 
 @end

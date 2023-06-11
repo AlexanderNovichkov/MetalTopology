@@ -24,7 +24,8 @@
 - (void)testMatrix2Reduction {
   SparseMatrix *matrix = [self readMatrixFromFile:@"matrix_2.txt"];
   PhComputation *computation = [[PhComputation alloc] initWithDevice:_mDevice Matrix:matrix];
-  SparseMatrix *reducedMatrix = [computation makeReduction];
+  [computation makeReduction];
+  SparseMatrix *reducedMatrix = [computation getReducedMatrix];
   SparseMatrix *expectedReducedMatrix = [self readMatrixFromFile:@"matrix_2_reduced.txt"];
   XCTAssertEqualObjects([reducedMatrix description], [expectedReducedMatrix description]);
 }
